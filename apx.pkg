@@ -78,8 +78,10 @@ SUBTYPE objname IS ALL_OBJECTS.SUBOBJECT_NAME%TYPE;
 TYPE curtype IS REF CURSOR;
 
 -- status output
-c_ok CONSTANT VARCHAR2(4) := ' OK.';
-c_fld CONSTANT VARCHAR2(8) := ' failed!';
+c_ok CONSTANT VARCHAR2(4) := 'OK.';
+c_fld CONSTANT VARCHAR2(8) := 'failed!';
+c_con CONSTANT VARCHAR2(8) := 'connected';
+c_discon CONSTANT VARCHAR2(8) := 'disconnected';
 
 -- padding
 c_pad CONSTANT PLS_INTEGER := 85;
@@ -92,6 +94,7 @@ l_stepname objname := 'null';
 l_step pls_integer := 0;
 l_step_comment varchar2(1000);
 l_str varchar2(4000);
+l_apxcon varchar2(100);
 
 -- APEX Session
 p_session_id varchar2(512);
@@ -486,18 +489,23 @@ END;
 -- Initialization Section
 ------------------------------------------------------------------
 BEGIN
-     l_stepname := 'PKG INIT';
+     l_stepname := 'INIT';
      l_step := l_step + 1;
      l_step_comment := 'APEX Session ID';
 
      ------------------------------------------------------------------
      -- APEX Environment
-     -- (set here to see if a session exists, if not,
-     --  no more processing needed.)
+     -- (set here to see if a session exists,
+     --  else no more processing needed.)
      ------------------------------------------------------------------
-     p_session_id := nvl(v('SESSION_ID'), 'DISCONNECTED');
+     p_session_id := nvl(v('SESSION_ID'), c_discon);
 
-     if (p_session_id != 'DISCONNECTED') then
+     if (p_session_id != c_discon) then
+       ------------------------------------------------------------------
+       -- APEX Settings (Workspace ID/NAME, APP_ID, APP_USER,...)
+       ------------------------------------------------------------------
+
+
 
        ------------------------------------------------------------------
        -- get current Database- and APEX Majorversion
@@ -518,19 +526,20 @@ BEGIN
         from dba_registry
         where comp_id = ('APEX');
 
-      exception when others then -- in here we use hard-wired logging, since apxerr might not be in place
+      -- in here we use hard-wired logging, since apxerr might not be in place yet
+      exception when others then
         l_str := 'ERROR: ['|| l_pkg||']:['||l_stepname|| ']:[';
         l_str := l_str ||l_step||']: Setting '||l_step_comment||' has '||c_fld||' ***';
         dbms_output.put_line (l_str);
         dbms_output.put_line (sqlerrm);
-
       raise;
-
-
       end;
 
+  else
+    -- say something about usage of this package
+    null;
   end if;
-    -- APEX Settings (Workspace ID/NAME, APP_ID, APP_USER,...)
+
 
 
     -- Object Initialization ( objExists(:obj) ? return (1) : createObj(:obj) )
