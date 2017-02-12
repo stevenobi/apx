@@ -1,7 +1,7 @@
 set define off
 ----------------------------------------------------------------------------------
 --
--- Title: APX.l_pkg (APEX MAIN PACKAGE)
+-- Title: APX (APEX MAIN PACKAGE)
 --
 -- Description: PL/SQL Package to provide an interface to subprocedures and functions.
 --
@@ -38,7 +38,7 @@ set define off
 --
 -- Disclaimer: the software is delivered "as-is", and the author takes
 -- no responsiblity nor guarantee for the proper function of this script
--- nor for any damages or misfunctions that occure from using this software.
+-- nor for any damages or misfunctions that might occure from using this software.
 --
 ----------------------------------------------------------------------------------
 
