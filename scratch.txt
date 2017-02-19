@@ -1,0 +1,113 @@
+    min-height: inherit;
+
+border-style: inset;
+border-color: initial;
+border-image: initial;
+
+.col-12 {
+    width: 100%;
+    min-height: 600px;
+    }
+
+
+    .t-Body-contentInner {
+            padding-top: 3px;
+      }
+
+#R1808649679558818
+#R1808649679558818 > div.t-Region-bodyWrap
+#R1808649679558818 > div.t-Region-bodyWrap > div.t-Region-body { min-height: inherit; }
+#R1808649679558818 div.t-Region-bodyWrap div.t-Region-body { min-height: inherit; }
+
+home   fa-home
+feedback fa-stack-exchange
+bug-track fa-bug
+project-track  fa-calendar
+incident-management  fa-bomb
+
+f?p=107:100:2647912187017::NO::P101_CURRENT_SESSION:12345:NO
+f?p=1000:2:2647912187017:108:NO::P0_APP_REQUEST,P0_PAGE_ID:Incident%20Management,1
+
+f?p=&REQUEST.:&P0_PAGE_ID.:&SESSION.::NO::P101_CURRENT_SESSION,P101_CURRENT_USER:&SESSION.,&APP_USER.:NO
+
+
+-- 109 P-Track ACL
+select "ID", "USERNAME",
+"ACCESS_LEVEL_ID",
+case when ACCESS_LEVEL_ID = 3 then 'Administrator'
+     when ACCESS_LEVEL_ID = 2 then 'Contributor'
+     when ACCESS_LEVEL_ID = 1 then 'Reader'
+     end the_access_level,
+case when account_locked = 'Y' then 'Yes' else 'No' end account_locked,
+lower(created_by) "CREATED_BY",
+"CREATED"
+from "#OWNER#"."EBA_PROJ_STATUS_USERS"
+
+-- 108 Incident Management
+select
+  "ID",
+  "USERNAME",
+  "ACCESS_LEVEL_ID",
+  case when account_locked = 'Y' then 'Yes' else 'No' end account_locked,
+  "CREATED_BY",
+  "CREATED"
+from "#OWNER#"."EBA_INTRACK_USERS"  u;
+
+
+
+
+-- smaller breadcrumb
+class="t-Body-title has-shadow t-Body-title-shrink"
+
+
+
+Public Sub Page_Load(sender as Object, e as EventArgs)
+
+    'build the content for the dynamic Word document
+    'in HTML alongwith some Office specific style properties.
+    Dim strBody As New System.Text.StringBuilder("")
+
+    strBody.Append("<html " & _
+            "xmlns:o='urn:schemas-microsoft-com:office:office' " & _
+            "xmlns:w='urn:schemas-microsoft-com:office:word'" & _
+            "xmlns='http://www.w3.org/TR/REC-html40'>" & _
+            "<head><title>Time</title>")
+
+    'The setting specifies document's view after it is downloaded as Print
+    'instead of the default Web Layout
+    strBody.Append("<!--[if gte mso 9]>" & _
+                             "<xml>" & _
+                             "<w:WordDocument>" & _
+                             "<w:View>Print</w:View>" & _
+                             "<w:Zoom>90</w:Zoom>" & _
+                             "<w:DoNotOptimizeForBrowser/>" & _
+                             "</w:WordDocument>" & _
+                             "</xml>" & _
+                             "<![endif]-->")
+
+    strBody.Append("<style>" & _
+                            "<!-- /* Style Definitions */" & _
+                            "@page Section1" & _
+                            "   {size:8.5in 11.0in; " & _
+                            "   margin:1.0in 1.25in 1.0in 1.25in ; " & _
+                            "   mso-header-margin:.5in; " & _
+                            "   mso-footer-margin:.5in; mso-paper-source:0;}" & _
+                            " div.Section1" & _
+                            "   {page:Section1;}" & _
+                            "-->" & _
+                           "</style></head>")
+
+    strBody.Append("<body lang=EN-US style='tab-interval:.5in'>" & _
+                            "<div class=Section1>" & _
+                            "<h1>Time and tide wait for none</h1>" & _
+                            "<p style='color:red'><I>" & _
+                            DateTime.Now & "</I></p>" & _
+                            "</div></body></html>")
+
+    'Force this content to be downloaded
+    'as a Word document with the name of your choice
+    Response.AppendHeader("Content-Type", "application/msword")
+    Response.AppendHeader ("Content-disposition", _
+                           "attachment; filename=myword.doc")
+    Response.Write(strBody)
+End Sub
