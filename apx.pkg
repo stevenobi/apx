@@ -1,7 +1,7 @@
 set define off
 ----------------------------------------------------------------------------------
 --
--- Title: APX (APEX MAIN PACKAGE)
+-- Title: APX.l_pkg (APEX MAIN PACKAGE)
 --
 -- Description: PL/SQL Package to provide an interface to subprocedures and functions.
 --
@@ -15,6 +15,12 @@ set define off
 --   APEX_ADMINISTRATOR_ROLE
 --   select on "SYS"."V_$INSTANCE" and DBA_REGISTRY
 --   create for views, tables, packages and synonyms
+--
+--
+-- grant execute on dbms_crypto to apxdba;
+-- grant  DEBUG CONNECT SESSION to apxdba;
+-- grant DEBUG ANY PROCEDURE to apxdba;
+--
 --
 -- Example for User APXDBA:
 --
@@ -38,7 +44,7 @@ set define off
 --
 -- Disclaimer: the software is delivered "as-is", and the author takes
 -- no responsiblity nor guarantee for the proper function of this script
--- nor for any damages or misfunctions that might occure from using this software.
+-- nor for any damages or misfunctions that occure from using this software.
 --
 ----------------------------------------------------------------------------------
 
@@ -77,11 +83,23 @@ SUBTYPE objname IS ALL_OBJECTS.SUBOBJECT_NAME%TYPE;
 -- generic weak REF CURSOR (no RETURN Clause)
 TYPE curtype IS REF CURSOR;
 
+-- globals
+g_debug boolean;
+
+g_txt varchar2(4000);
+g_dat date;
+g_int pls_integer;
+g_num number;
+
+-- Encryption
+g_num_key_bytes NUMBER := 256/8;        -- key length 256 bits (32 bytes)
+g_key_bytes_raw RAW (32); -- stores 256-bit encryption key
+
 -- status output
-c_ok CONSTANT VARCHAR2(4) := 'OK.';
-c_fld CONSTANT VARCHAR2(8) := 'failed!';
-c_con CONSTANT VARCHAR2(8) := 'connected';
-c_discon CONSTANT VARCHAR2(8) := 'disconnected';
+c_ok CONSTANT VARCHAR2(5) := 'OK.';
+c_fld CONSTANT VARCHAR2(10) := 'failed!';
+c_con CONSTANT VARCHAR2(20) := 'connected';
+c_discon CONSTANT VARCHAR2(20) := 'disconnected';
 
 -- padding
 c_pad CONSTANT PLS_INTEGER := 85;
@@ -89,7 +107,7 @@ c_pad CONSTANT PLS_INTEGER := 85;
 -- name of this package
 l_pkg objname := 'APX';
 
--- step marker
+-- Step Markers for Debug
 l_stepname objname := 'null';
 l_step pls_integer := 0;
 l_step_comment varchar2(1000);
@@ -117,6 +135,35 @@ ppl_len PLS_INTEGER := 0;
 ------------------------------------------------------------------
 -- Package Procedures and Functions
 ------------------------------------------------------------------
+
+------------------------------------------------------------------
+-- Setter and Getter Procedures and Functions
+-- are used to set and get global variable values
+-- Overloaded to support real types (char, int, date)
+------------------------------------------------------------------
+
+PROCEDURE "SETVAL" (
+p_variable in varchar2,
+p_value in varchar2,
+p_initialize in boolean := false);
+
+
+FUNCTION "GETVAL" (
+p_variable in varchar2,
+p_initialize in boolean := false)
+return varchar2;
+
+------------------------------------------------------------------
+-- Encryption and Decryption Procedures
+-- for Credential Management
+------------------------------------------------------------------
+function "ENCRYPT" (
+input_string       VARCHAR2
+) return raw;
+
+function "DECRYPT"  (
+p_encrypted_raw      RAW
+) return varchar2;
 
 ------------------------------------------------------------------
 -- DBMS_OUTPUT Limitations:
@@ -219,6 +266,22 @@ FUNCTION "BOOLEAN_TO_NUM" (
 ) RETURN NUMBER;
 
 
+-- log a login
+procedure "REGISTER_LOGIN" (
+p_session in varchar2 := v('SESSION'),
+p_username in varchar2 := v('APP_USER'),
+p_app_id in number := v('APP_ID'),
+p_ws_id in number := v('FLOW_ID'),
+p_userpw in varchar2 := v('P101_PASSWORD')
+);
+
+function "HAS_SESSION" (
+p_app_user varchar2,
+p_app_id number default null,
+p_session varchar2 default null,
+p_ws_id number default null
+) return boolean;
+
 END "APX";
 /
 
@@ -237,6 +300,109 @@ IS
 --------------------------------------------------------------------------------
 -- Public Procedures and Functions
 --------------------------------------------------------------------------------
+
+------------------------------------------------------------------
+-- Setter and Getter Procedures and Functions
+-- used to set and get global variable values
+------------------------------------------------------------------
+
+PROCEDURE "SETVAL" (
+p_variable in varchar2,
+p_value in varchar2,
+p_initialize in boolean := false)
+is
+l_sql varchar2(4000);
+begin
+  -- set the string
+  l_sql := 'begin '|| p_variable||':= :val ; end;';
+  if (p_initialize) then -- the value gets pruned before
+    execute immediate l_sql using in '';
+    --dbms_output.put_line('apx.g_txt (in package): '||apx.g_txt); -- needed for testing
+  end if;
+  -- set value
+  execute immediate l_sql using in p_value;
+end;
+
+
+FUNCTION "GETVAL" (
+p_variable in varchar2,
+p_initialize in boolean := false)
+return varchar2
+is
+l_sql varchar2(4000);
+l_value varchar2(4000);
+begin
+  -- set the string
+  l_sql := 'begin :val :='|| p_variable||'; end;';
+  -- get value
+  execute immediate l_sql using out l_value;
+  if (p_initialize) then -- the value gets pruned after
+    setval(p_variable, null);
+    dbms_output.put_line('apx.g_txt (in package): '||apx.g_txt); -- needed for testing
+  end if;
+  return l_value;
+end;
+
+------------------------------------------------------------------
+-- Encryption and Decryption Procedures
+-- for Credential Management
+------------------------------------------------------------------
+
+-- Encrypt VARCHAR2 & return RAW
+function "ENCRYPT" (
+input_string       VARCHAR2
+) return raw
+is
+   output_string      VARCHAR2 (200);
+   encrypted_raw      RAW (2000);             -- stores encrypted binary text
+   decrypted_raw      RAW (2000);             -- stores decrypted binary text
+   encryption_type    PLS_INTEGER :=          -- total encryption type
+                            SYS.DBMS_CRYPTO.ENCRYPT_AES256
+                          + SYS.DBMS_CRYPTO.CHAIN_CBC
+                          + SYS.DBMS_CRYPTO.PAD_PKCS5;
+BEGIN
+  --DBMS_OUTPUT.PUT_LINE ( 'Original string: ' || input_string);
+   encrypted_raw := SYS.DBMS_CRYPTO.ENCRYPT
+      (
+         src => UTL_I18N.STRING_TO_RAW (input_string,  'AL32UTF8'),
+         typ => encryption_type,
+         key => g_key_bytes_raw
+      );
+    -- The encrypted value "encrypted_raw"
+  --output_string := UTL_I18N.RAW_TO_CHAR (encrypted_raw, 'AL32UTF8');
+  --DBMS_OUTPUT.PUT_LINE ( 'Original string: ' || output_string);
+return encrypted_raw;
+end "ENCRYPT";
+
+
+-- Decrypt RAW & return VARCHAR2
+function  "DECRYPT" (
+p_encrypted_raw      RAW
+) return varchar2
+is
+   output_string      VARCHAR2 (200);
+   decrypted_raw      RAW (2000);             -- stores decrypted binary text
+   encryption_type    PLS_INTEGER :=          -- total encryption type
+                            SYS.DBMS_CRYPTO.ENCRYPT_AES256
+                          + SYS.DBMS_CRYPTO.CHAIN_CBC
+                          + SYS.DBMS_CRYPTO.PAD_PKCS5;
+BEGIN
+  --output_string := UTL_I18N.RAW_TO_CHAR (p_encrypted_raw, 'AL32UTF8');
+  --DBMS_OUTPUT.PUT_LINE ( 'Input hash: ' || output_string);
+  decrypted_raw := SYS.DBMS_CRYPTO.DECRYPT
+  (
+     src => p_encrypted_raw,
+     typ => encryption_type,
+     key => apx.getval('apx.g_key_bytes_raw')
+  );
+   output_string := UTL_I18N.RAW_TO_CHAR (decrypted_raw, 'AL32UTF8');
+   --DBMS_OUTPUT.PUT_LINE ('Decrypted string: ' || output_string);
+return  output_string;
+exception when others then
+--DBMS_OUTPUT.PUT_LINE ('Input hash: ' || output_string);
+--DBMS_OUTPUT.PUT_LINE (sqlerrm);
+return null;
+END "DECRYPT";
 
 ------------------------------------------------------------------
 -- Printing Output Procedures for Debug and Logging
@@ -480,8 +646,50 @@ RETURN retval;
 END;
 
 ------------------------------------------------------------------
--- Admin Procedures (DDL mostly)
+-- Admin Procedures (APEX Users and Sessions mostly)
 ------------------------------------------------------------------
+
+procedure "REGISTER_LOGIN" (
+p_session in varchar2 := v('SESSION'),
+p_username in varchar2 := v('APP_USER'),
+p_app_id in number := v('APP_ID'),
+p_ws_id in number := v('FLOW_ID'),
+p_userpw in varchar2 := v('P101_PASSWORD')
+)
+is
+begin
+if p_session is not null then
+  insert into APX$APP_USER_SESSION (APP_USER_SESSION_ID,APP_USERNAME,APP_ID,APP_WS_ID,APP_USER_PWD)
+  values (p_session, p_username, p_app_id, p_ws_id, apx.encrypt(p_userpw));
+  commit;
+end if;
+exception when others then
+  rollback;
+  raise;
+end;
+
+function "HAS_SESSION" (
+p_app_user varchar2,
+p_app_id number default null,
+p_session varchar2 default null,
+p_ws_id number default null
+) return boolean
+is
+l_session pls_integer;
+begin
+select count(1) into l_session
+from APEX_APP_USER_SESSION a
+where a.app_user_session_id = nvl(p_session, a.app_user_session_id)
+  and a.app_username = p_app_user
+  and a.app_id = nvl(p_app_id, a.app_id)
+  and a.app_ws_id =nvl(p_ws_id, a.app_ws_id)
+  and a.app_session_is_current = 'Y';
+  if l_session >= 1 then
+      return(true);
+  else
+      return(false);
+  end if;
+end;
 
 
 
@@ -490,17 +698,26 @@ END;
 ------------------------------------------------------------------
 BEGIN
      l_stepname := 'INIT';
-     l_step := l_step + 1;
-     l_step_comment := 'APEX Session ID';
+
+       ------------------------------------------------------------------
+       -- Set Encryption key
+       ------------------------------------------------------------------
+       l_step := l_step + 1;
+       l_step_comment := 'Set Encryption key';
+       apx.setval('apx.g_key_bytes_raw', 'ED00BF44C9E479232F41ED518FDD670F8DCE08623F38D1435C556122361F1AC5');
 
      ------------------------------------------------------------------
      -- APEX Environment
      -- (set here to see if a session exists,
      --  else no more processing needed.)
      ------------------------------------------------------------------
+     l_step := l_step + 1;
+     l_step_comment := 'APEX Session ID';
      p_session_id := nvl(v('SESSION_ID'), c_discon);
 
-     if (p_session_id != c_discon) then
+     if (p_session_id != c_discon or g_debug) then -- a Session exists
+
+
        ------------------------------------------------------------------
        -- APEX Settings (Workspace ID/NAME, APP_ID, APP_USER,...)
        ------------------------------------------------------------------
