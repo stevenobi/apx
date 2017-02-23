@@ -28,8 +28,9 @@ incident-management  fa-bomb
 f?p=107:100:2647912187017::NO::P101_CURRENT_SESSION:12345:NO
 f?p=1000:2:2647912187017:108:NO::P0_APP_REQUEST,P0_PAGE_ID:Incident%20Management,1
 
-f?p=&REQUEST.:&P0_PAGE_ID.:&SESSION.::NO::P101_CURRENT_SESSION,P101_CURRENT_USER:&SESSION.,&APP_USER.:NO
+f?p=&REQUEST.:&P0_PAGE_ID.:&SESSION.::NO::P101_CURRENT_SESSION,P101_CURRENT_USER,P101_TO_PAGE:&SESSION.,&APP_USER.,1:NO
 
+https%3A%2F%2Fol71%3A5505%2Fapex%2Fapex_authentication.callback%3Fp_session_id%3D2951039946583%26p_app_id%3D1000%26p_ajax_identifier%3DEEA7B7B5F4BCD0AD6E0741AC76F902C42E53F2391FC6D5335495002FA6121CD1
 
 -- 109 P-Track ACL
 select "ID", "USERNAME",
@@ -52,6 +53,268 @@ select
   "CREATED_BY",
   "CREATED"
 from "#OWNER#"."EBA_INTRACK_USERS"  u;
+
+
+
+
+(cast(current_timestamp as date) - date '1970-01-01')*24*60*60
+
+
+-- Application User
+create table "APX$APP_USER_SESSION" (
+app_user_session_id number not null primary key,
+app_username varchar2(64) not null,
+app_user_email varchar2(128) not null,
+app_id number,
+app_ws_id number,
+app_user_pwd varchar2(64),
+app_user_last_login timestamp default current_timestamp,
+app_user_session_seconds number default 900
+);
+
+
+insert into APX$APP_USER_SESSION (APP_USER_SESSION_ID,APP_USERNAME,APP_USER_EMAIL,APP_ID,APP_WS_ID,APP_USER_PWD)
+values (v('SESSION'),v('P101_USERNAME'),v('APP_USER_EMAIL'),v('APP_ID'),v('FLOW_ID'), apx.encrypt(v(':P101_PASSWORD')));
+
+
+declare
+l_session pls_integer := 0;
+begin
+select count(1) into l_session
+from APEX_APP_USER_SESSION a
+where a.app_user_session_id = :SESSION
+  and a.app_username = :APP_USER
+  and a.app_id = :APP_ID
+  and a.app_ws_id = :FLOW_ID
+  and a.app_session_is_current = 'Y';
+--apex_authentication.is_authenticated
+if l_Session >= 1 then
+    return(apex_escape.html(:APP_USER)||', you are known to the system');
+else
+    return('Please sign in '|| l_session);
+end if;
+end;
+
+-- has_Session?
+create or replace function hs(
+p_app_user varchar2 default null,
+p_app_id number default null
+) return boolean
+is
+begin
+  return(apx.has_session( nvl(p_app_id, v('APP_ID')) , nvl(p_app_user, v('APP_USER')) ) );
+end;
+/
+
+procedure login (
+    p_on_success in varchar2 )
+    is
+begin
+  if hs(:P101_CURRENT_USER) then
+   sys.owa_util.redirect_url(p_on_success||'&p_x01='||:P101_TO_PAGE );
+   apex_application.stop_apex_engine;
+   else
+     sys.owa_util.redirect_url('f?p='||:APP_ID||':101:::NO:::');
+   apex_application.stop_apex_engine;
+   end if;
+end;
+
+htp.p('has session');
+
+declare
+    l_callback varchar2(4000) := apex_authentication.get_callback_url;
+    lval varchar2(4000);
+begin
+     lval := sys.utl_url.escape ( url => l_callback, escape_reserved_chars => true );
+     return lval;
+end;
+https://ol71:5505/apex/f?p=1000:102:15297758448778:ADMIN:NO::P0_TO_PAGE:https%3A%2F%2Fol71%3A5505%2Fapex%2Fapex_authentication.callback%3Fp_session_id%3D14888594577106%26p_app_id%3D108%26p_ajax_identifier%3D:
+f?p=1000:102:15297758448778:ADMIN:NO::P0_TO_PAGE:https%3A%2F%2Fol71%3A5505%2
+
+--Authentication Function Name
+
+--Specify the name of the function that will verify the user's username and password,
+--after they were entered on a login page. If you enter nothing, you allow any username/password to succeed.
+--The function itself can be defined in the authentication's 'PL/SQL Code' textarea, within a package or as a stored function.
+
+--This function must return a boolean to the login procedure that calls it.
+--It has 2 input parameters 'p_username' and 'p_password' that can be used t
+--o access the values an end user entered on the login page.
+
+--Examples
+--Enter the following code in the 'PL/SQL Code' textarea
+
+function my_authentication (
+    p_username in varchar2,
+    p_password in varchar2 )
+    return boolean
+is
+    l_user my_users.user_name%type := upper(p_username);
+    l_pwd  my_users.password%type;
+    l_id   my_users.id%type;
+begin
+    select id  , password
+      into l_id, l_pwd
+      from my_users
+     where user_name = l_user;
+
+    return l_pwd = rawtohex(sys.dbms_crypto.hash (
+                       sys.utl_raw.cast_to_raw(p_password||l_id||l_user),
+                       sys.dbms_crypto.hash_sh512 ));
+exception
+    when NO_DATA_FOUND then return false;
+end;
+and my_authentication as 'Authentication Function'.
+
+-- Sentry Function
+--Specify PL/SQL code returning a boolean value, within the 'PL/SQL Code' -
+
+function sentry_basic_auth
+return boolean
+is
+    c_auth_header   constant varchar2(4000) := owa_util.get_cgi_env('AUTHORIZATION');
+    l_user_pass     varchar2(4000);
+    l_separator_pos pls_integer;
+begin
+    if apex_application.g_user <> 'nobody' then
+        return true;
+    end if;
+
+    if c_auth_header like 'Basic %' then
+        l_user_pass := utl_encode.text_decode (
+                           buf      => substr(c_auth_header, 7),
+                           encoding => utl_encode.base64 );
+        l_separator_pos := instr(l_user_pass, ':');
+        if l_separator_pos > 0 then
+            apex_authentication.login (
+                p_username => substr(l_user_pass, 1, l_separator_pos-1),
+                p_password => substr(l_user_pass, l_separator_pos+1) );
+            return true;
+        end if;
+    end if;
+
+    return false;
+end sentry_basic_auth;
+
+
+Specify a PL/SQL Database function -
+
+sentry_basic_auth
+
+
+
+declare
+  l_callback varchar2(4000) := apex_authentication.get_callback_url;
+  curl_back varchar2(4000);
+  curl_togo varchar2(4000);
+begin
+  --curl_back := sys.utl_url.escape ( url => l_callback, escape_reserved_chars => true );
+  curl_togo := 'f?p=1000:102:'||:P101_CURRENT_SESSION||':'||:P101_CURRENT_USER||':NO::P0_TO_PAGE:'||curl_back||':';
+  sys.owa_util.redirect_url( curl_togo );
+  apex_application.stop_apex_engine;
+null;
+end;
+
+
+rawtohex(sys.dbms_crypto.hash (
+                       sys.utl_raw.cast_to_raw(p_password||l_id||l_user),
+                       sys.dbms_crypto.hash_sh512 ));
+
+
+begin
+if hs(:P101_CURRENT_USER) then
+    sys.htp.p(:P101_CURRENT_USER||' is authenticated');
+else
+  sys.htp.p('Please sign in '||:P101_CURRENT_USER);
+end if;
+end;
+
+declare
+l_session pls_integer;
+begin
+select count(1) into l_session
+from APEX_APP_USER_SESSION a
+where a.app_user_session_id = :SESSION
+  and a.app_username = :APP_USER
+  and a.app_id = :APP_ID
+  and a.app_ws_id = :FLOW_ID
+  and a.app_session_is_current = 'Y';
+--apex_authentication.is_authenticated
+if l_Session = 1 then
+    return(apex_escape.html(:APP_USER)||', you are known to the system');
+else
+    return('Please sign in');
+end if;
+end;
+
+
+create or replace function encrypt (
+input_string       VARCHAR2 :=  'Secret Message'
+) return raw
+is
+   output_string      VARCHAR2 (200);
+   encrypted_raw      RAW (2000);             -- stores encrypted binary text
+   decrypted_raw      RAW (2000);             -- stores decrypted binary text
+   num_key_bytes      NUMBER := 256/8;        -- key length 256 bits (32 bytes)
+   key_bytes_raw      RAW (32);               -- stores 256-bit encryption key
+   encryption_type    PLS_INTEGER :=          -- total encryption type
+                            DBMS_CRYPTO.ENCRYPT_AES256
+                          + DBMS_CRYPTO.CHAIN_CBC
+                          + DBMS_CRYPTO.PAD_PKCS5;
+BEGIN
+
+   DBMS_OUTPUT.PUT_LINE ( 'Original string: ' || input_string);
+
+   key_bytes_raw := DBMS_CRYPTO.RANDOMBYTES (num_key_bytes);
+   encrypted_raw := DBMS_CRYPTO.ENCRYPT
+      (
+         src => UTL_I18N.STRING_TO_RAW (input_string,  'AL32UTF8'),
+         typ => encryption_type,
+         key => key_bytes_raw
+      );
+    -- The encrypted value "encrypted_raw" can be used here
+       output_string := UTL_I18N.RAW_TO_CHAR (encrypted_raw, 'AL32UTF8');
+       DBMS_OUTPUT.PUT_LINE ( 'Original string: ' || output_string);
+
+return encrypted_raw;
+end;
+/
+
+create or replace function decrypt (
+p_encrypted_raw      RAW,
+) return varchar2
+is
+   output_string      VARCHAR2 (200);
+   decrypted_raw      RAW (2000);             -- stores decrypted binary text
+   num_key_bytes      NUMBER := 256/8;        -- key length 256 bits (32 bytes)
+   key_bytes_raw      RAW (32);               -- stores 256-bit encryption key
+   encryption_type    PLS_INTEGER :=          -- total encryption type
+                            DBMS_CRYPTO.ENCRYPT_AES256
+                          + DBMS_CRYPTO.CHAIN_CBC
+                          + DBMS_CRYPTO.PAD_PKCS5;
+BEGIN
+
+  output_string := UTL_I18N.RAW_TO_CHAR (p_encrypted_raw, 'AL32UTF8');
+  DBMS_OUTPUT.PUT_LINE ( 'Input hash: ' || output_string);
+
+  decrypted_raw := DBMS_CRYPTO.DECRYPT
+  (
+     src => p_encrypted_raw,
+     typ => encryption_type,
+     key => key_bytes_raw
+  );
+
+  output_string := UTL_I18N.RAW_TO_CHAR (decrypted_raw, 'AL32UTF8');
+  DBMS_OUTPUT.PUT_LINE ('Decrypted string: ' || output_string);
+
+return  output_string;
+END;
+/
+
+
+
+
+
 
 
 
