@@ -1,4 +1,6 @@
-    min-height: inherit;
+ max-height:
+ 
+ min-height: inherit;
 
 border-style: inset;
 border-color: initial;
