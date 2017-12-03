@@ -40,6 +40,7 @@ set define off
 -- History:      12.09.2007 SO: created
 --               29.01.2017 SO: refactored for APEX
 --               12.02.2017 SO: integrated in new Git Repository APX
+--               20.11.2017 SO: outfactored encryption to interfaces, session mgmt
 --
 -- Disclaimer: the software is delivered "as-is", and the author takes
 -- no responsiblity nor guarantee for the proper function of this script
@@ -306,60 +307,17 @@ function "GETAPP" (
 p_app_id apex_applications.application_id%type
 ) return apex_applications.application_name%type;
 
+
 -- Get the main APEX Database Schema (Owner of the API)
 function "GETAPEXOWNER"
 return apex_applications.owner%type;
 
-
-------------------------------------------------------------------
--- Apex Session Management
-------------------------------------------------------------------
-
--- log a login
-procedure "REGISTER_LOGIN" (
-p_username in varchar2,
-p_session in varchar2,
-p_app_id in number,
-p_ws_id in number,
-p_userpw in varchar2 := null
-);
-
-
-function "HAS_SESSION" (
-p_app_user varchar2,
-p_app_id number default null,
-p_session varchar2 default null,
-p_ws_id number default null
-) return boolean;
-
-
--- Login APEX User via default Apex Authentication Method
-procedure "LOGIN" (
-p_usr in varchar2,
-p_pwd in varchar2 default null
-);
-
--- Interface to Apex Logout API (WWV_FLOW_AUTHENTICATION_API -> APEX_AUTHENTICATION)
--- to make this work, you gotta have to create a synoym/procedure of the name APEX_AUTHENTICATION
--- in the schema of the parsing user aka the owner of this package
-procedure "LOGOUT" (
-p_usr in varchar2,
-p_app_id     in number,
-p_session_id number default null
-);
 
 -- redirect to a given URL
 procedure "REDIRECT" (
 p_url in varchar2
 );
 
--- APPSSO related
-function "GET_APPSSO_MASTER"
-return number;
-
-procedure "SET_APPSSO_MASTER"(
-p_master_id in number
-);
 
 ------------------------------------------------------------------
 -- DBMS_OUTPUT Limitations:
@@ -486,22 +444,16 @@ p_encrypted_raw      RAW
 is
    output_string      VARCHAR2 (200);
    decrypted_raw      RAW (2000);             -- stores decrypted binary text
-   encryption_type    PLS_INTEGER :=          -- total encryption type
-                            SYS.DBMS_CRYPTO.ENCRYPT_AES256
-                          + SYS.DBMS_CRYPTO.CHAIN_CBC
-                          + SYS.DBMS_CRYPTO.PAD_PKCS5;
 BEGIN
   --output_string := UTL_I18N.RAW_TO_CHAR (p_encrypted_raw, 'AL32UTF8');
   --DBMS_OUTPUT.PUT_LINE ( 'Input hash: ' || output_string);
-  decrypted_raw := SYS.DBMS_CRYPTO.DECRYPT
-  (
-     src => p_encrypted_raw,
-     typ => encryption_type,
-     key => key_bytes_raw
-  );
-   output_string := UTL_I18N.RAW_TO_CHAR (decrypted_raw, 'AL32UTF8');
-   --DBMS_OUTPUT.PUT_LINE ('Decrypted string: ' || output_string);
+
+  -- using interface "APX_ENCRYPT"
+  output_string := "APX_DECRYPT"(p_encrypted_raw);
+
+  --DBMS_OUTPUT.PUT_LINE ('Decrypted string: ' || output_string);
 return  output_string;
+
 exception when others then
 --DBMS_OUTPUT.PUT_LINE ('Input hash: ' || output_string);
 --DBMS_OUTPUT.PUT_LINE (sqlerrm);
@@ -523,25 +475,21 @@ function "ENCRYPT" (
 input_string       VARCHAR2
 ) return raw
 is
-   output_string      VARCHAR2 (200);
-   encrypted_raw      RAW (2000);             -- stores encrypted binary text
-   decrypted_raw      RAW (2000);             -- stores decrypted binary text
-   encryption_type    PLS_INTEGER :=          -- total encryption type
-                            SYS.DBMS_CRYPTO.ENCRYPT_AES256
-                          + SYS.DBMS_CRYPTO.CHAIN_CBC
-                          + SYS.DBMS_CRYPTO.PAD_PKCS5;
+  output_string      VARCHAR2 (200);
+  encrypted_raw      RAW (2000);             -- stores encrypted binary text
 BEGIN
   --DBMS_OUTPUT.PUT_LINE ( 'Original string: ' || input_string);
-   encrypted_raw := SYS.DBMS_CRYPTO.ENCRYPT
-      (
-         src => UTL_I18N.STRING_TO_RAW (input_string,  'AL32UTF8'),
-         typ => encryption_type,
-         key => key_bytes_raw
-      );
-    -- The encrypted value "encrypted_raw"
-  --output_string := UTL_I18N.RAW_TO_CHAR (encrypted_raw, 'AL32UTF8');
+
+  -- using interface "APX_ENCRYPT"
+   encrypted_raw := "APX_ENCRYPT"(input_string);
+
+   --output_string := UTL_I18N.RAW_TO_CHAR (encrypted_raw, 'AL32UTF8');
   --DBMS_OUTPUT.PUT_LINE ( 'Original string: ' || output_string);
 return encrypted_raw;
+exception when others then
+--DBMS_OUTPUT.PUT_LINE ('Input hash: ' || output_string);
+--DBMS_OUTPUT.PUT_LINE (sqlerrm);
+return null;
 end "ENCRYPT";
 
 ------------------------------------------------------------------
@@ -653,98 +601,6 @@ exception when others then
 raise;
 end "GETAPEXOWNER";
 
-------------------------------------------------------------------
--- Apex Session Management
-------------------------------------------------------------------
-
--- Register User and Credentials after successful login
-procedure "REGISTER_LOGIN" (
-p_username in varchar2,
-p_session in varchar2,
-p_app_id in number,
-p_ws_id in number,
-p_userpw in varchar2 := null
-)
-is
-begin
-if p_session is not null then
-  insert into APX$APP_USER_SESSION (APP_USER_SESSION_ID,APP_USERNAME,APP_ID,APP_WS_ID,APP_USER_PWD)
-  values (p_session, p_username, p_app_id, p_ws_id, apx.encrypt(p_userpw));
-  commit;
-end if;
-exception when others then
-  rollback;
-  raise;
-end;
-
--- Check if User has a valid session
-function "HAS_SESSION" (
-p_app_user varchar2,
-p_app_id number default null,
-p_session varchar2 default null,
-p_ws_id number default null
-) return boolean
-is
-l_session pls_integer;
-begin
-select count(1) into l_session
-from APEX_APP_USER_SESSION a
-where upper(a.app_username) = upper(trim(p_app_user))
-  and a.app_user_session_id = nvl(p_session, a.app_user_session_id)
-  and a.app_id = nvl(p_app_id, a.app_id)
-  and a.app_ws_id = nvl(p_ws_id, a.app_ws_id)
-  and a.app_session_is_current = 'Y';
-  if l_session >= 1 then
-      return(true);
-  else
-      return(false);
-  end if;
-end "HAS_SESSION";
-
-
--- Login APEX User via default Apex Authentication Method
-procedure "LOGIN" (
-p_usr in varchar2,
-p_pwd in varchar2 default null
-)
-is
-l_usr varchar2(128);
-l_pwd varchar2(256);
-begin
-  if has_session (p_usr) then
-    select s.app_username, s.app_user_pwd
-    into l_usr, l_pwd
-    from apx$app_user_session s
-    where lower(s.app_username) = lower(p_usr)
-    and rownum = 1;
-    -- Authenticate with User's Credentials
-    apex_authentication.login(l_usr, decrypt(l_pwd));
-     -- apex_application.stop_apex_engine;
-  else -- we do nothing and let Apex handle the rest
-    null;
-  end if;
-exception when others then
-  raise;
-end "LOGIN";
-
-
-procedure "LOGOUT" (
-p_usr in varchar2,
-p_app_id in number,
-p_session_id number default null
-)
-is
-begin
-    update apx$app_user_session
-    set app_user_last_logout = current_timestamp,
-    app_user_session_seconds = 0
-    where  app_id = nvl(p_app_id, to_number(v('APP_ID')))
-        and lower(app_username) = lower(nvl(p_usr, v('APP_USER')))
-        and app_user_last_logout is null;
-  commit;
-exception when others then
-  null; -- ok here because we dont want to hassle users on logout. should be replaced with incident code when available
-end "LOGOUT";
 
 -- redirect to a given URL
 procedure "REDIRECT" (
@@ -757,27 +613,6 @@ begin
   sys.owa_util.redirect_url(l_url);
   apex_application.stop_apex_engine;
 end "REDIRECT";
-
-
-
-
-function "GET_SSO_MASTER"
-return number
-is
-begin
-  return ssomaster;
-end "GET_SSO_MASTER";
-
-
-procedure "SET_APPSSO_MASTER"(
-p_master_id in number
-)
-is
-begin
-  setval('apx.ssomaster', p_master_id);
-end;
-
-
 
 
 ------------------------------------------------------------------
@@ -1070,51 +905,45 @@ END;
 -- Initialization Section
 ------------------------------------------------------------------
 BEGIN
-     l_stepname := 'INIT';
+    l_stepname := 'INIT';
 
-       ------------------------------------------------------------------
-       -- Set Encryption key
-       ------------------------------------------------------------------
-       l_step := l_step + 1;
-       l_step_comment := 'Set Encryption key';
-       select apxkey into key_bytes_raw from dual;
+    ------------------------------------------------------------------
+    -- Set Encryption key
+    ------------------------------------------------------------------
+    l_step := l_step + 1;
+    l_step_comment := 'Set Encryption key';
+    select apxkey into key_bytes_raw from dual;
 
-     ------------------------------------------------------------------
-     -- APEX Environment
-     -- (set here to see if a session exists,
-     --  else no more processing needed.)
-     ------------------------------------------------------------------
-     l_step := l_step + 1;
-     l_step_comment := 'APEX Session ID';
-     p_session_id := nvl(v('SESSION_ID'), c_discon);
+    ------------------------------------------------------------------
+    -- APEX Environment
+    -- (set here to see if a session exists,
+    --  else no more processing needed.)
+    ------------------------------------------------------------------
+    l_step := l_step + 1;
+    l_step_comment := 'APEX Session ID';
+    p_session_id := nvl(v('SESSION_ID'), c_discon);
 
-     if (p_session_id != c_discon or g_debug) then -- a Session exists
-
+    if (p_session_id != c_discon or g_debug) then -- a Session exists or we debug
 
        ------------------------------------------------------------------
        -- APEX Settings (Workspace ID/NAME, APP_ID, APP_USER,...)
        ------------------------------------------------------------------
 
-
+      -- //TODO
 
        ------------------------------------------------------------------
        -- get current Database- and APEX Majorversion
        -- (set in here once to minimize depencies among packages)
        ------------------------------------------------------------------
-       begin
-        l_step := l_step + 1;
-        l_step_comment := 'DB Version';
-        select substr(version, 1,2)
-        into db_version
-        from dba_registry
-        where comp_id = ('CATALOG');
+      begin
 
-        l_step := l_step + 1;
-        l_step_comment := 'APEX Version';
-        select substr(version, 1,1)
-        into apx_version
-        from dba_registry
-        where comp_id = ('APEX');
+      l_step := l_step + 1;
+      l_step_comment := 'DB Version';
+      db_version := "APX_GET_VERSION"('CATALOG');
+
+      l_step := l_step + 1;
+      l_step_comment := 'APEX Version';
+      db_version := "APX_GET_VERSION"('APEX');
 
       -- in here we use hard-wired logging, since apxerr might not be in place yet
       exception when others then
@@ -1125,14 +954,10 @@ BEGIN
       raise;
       end;
 
-  else
-    -- say something about usage of this package
-    null;
-  end if;
-
-    -- Object Initialization ( objExists(:obj) ? return (1) : createObj(:obj) )
-    -- static Object List as array (['p':'pl_print_pretty_line':'pl':'n2b':'b2n':'oe':'iu':'hr':'ia':'iv':(..)])
-    --
+    else
+      -- say something about usage of this package, or
+      null;
+    end if;
 
 ------------------------------------------------------------------
 -- End of Initialization Section
@@ -1144,6 +969,7 @@ END "APX";
 ----------------------------------------------------------------------------------------------------
 -- Display Errors if any
 ------------------------------------------------------------------
+prompt
 prompt Package "APX" Errors:
 select line, text from all_errors
 where name = 'APX'
@@ -1153,25 +979,24 @@ prompt
 ----------------------------------------------------------------------------------------------------
 set define on
 
---grant execute on apx to apex_public_user;
---create public synonym apx for apx;
+---- if you want make it public
+-- grant execute on apx to apex_public_user;
+-- create public synonym apx for apx;
+
 --------------------------------------------------------------------------------
 -- provided interfaces
+prompt "APX" provided interfaces
 --------------------------------------------------------------------------------
--- needed for logou procedure
---create or replace synonym apex_authentication for apx;
-
---drop synonym apex_authentication;
-
-create or replace procedure register_login
+prompt
+prompt "REGISTER_LOGIN"
+create or replace procedure "REGISTER_LOGIN"
 is
 begin
-  apx.register_login(
-    p_username   => v('APP_USER'),
-    p_session    => v('SESSION'),
-    p_app_id     => v('APP_ID'),
-    p_ws_id      => apx.getwsid(p_app_id=>v('APP_ID')),
-    p_userpw     => v('P101_PASSWORD')
-    );
+  insert into "APX$USR_SESSION" (app_user_session_id, app_username, app_id, app_ws_id)
+  values(v('SESSION'), v('APP_USER'), v('APP_ID'), apx.getwsid(p_app_id=>v('APP_ID')));
 end;
 /
+
+set pages 0 line 120 define off verify off set feed off timing off
+
+EXIT SQL.SQLCODE;
