@@ -959,7 +959,7 @@ values ('AUTH_MODEL', null, 'Two-Factor', 3, 10, null, 'Apex Application Authent
 insert into "APX$CFG" (apx_config_name, apx_config_value, apx_config_def_value, apx_config_status_id, apx_config_ctx_id, apx_config_sub_ctx_id, apx_config_comment, apx_parent_config_id, app_id)
 values ('AUTH_METHOD', null, 'Application Express Accounts', 3, 10, null, 'Apex Authentication Method (Apex Accounts,  Database Account,  LDAP)', 13, null);
 insert into "APX$CFG" (apx_config_name, apx_config_value, apx_config_def_value, apx_config_status_id, apx_config_ctx_id, apx_config_sub_ctx_id, apx_config_comment, apx_parent_config_id, app_id)
-values ('AUTH_PROCESS', null, 'APEX_AUTHENTICATION', 3, 8, null, 'Apex Authentication Function', 13, null);
+values ('AUTH_PROCESS', null, 'APEX_AUTHENTICATION', 3, 10, null, 'Apex Authentication Function', 13, null);
 insert into "APX$CFG" (apx_config_name, apx_config_value, apx_config_def_value, apx_config_status_id, apx_config_ctx_id, apx_config_sub_ctx_id, apx_config_comment, apx_parent_config_id, app_id)
 values ('PRE_AUTH_METHOD', null, null, 3, 10, null, 'Apex Pre-Authentication Method', 13, null);
 insert into "APX$CFG" (apx_config_name, apx_config_value, apx_config_def_value, apx_config_status_id, apx_config_ctx_id, apx_config_sub_ctx_id, apx_config_comment, apx_parent_config_id, app_id)
