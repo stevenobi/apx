@@ -34,7 +34,7 @@ drop table "APX$MIME" purge;
 
 prompt APX$CFG
 drop synonym  "APEX_CONFIG";
-drop synonym  "APEX_SETTING";
+drop synonym  "APEX_SETTINGS";
 
 drop sequence "APX$CFG_SEQ";
 drop trigger "APX$CFG_BIU_TRG";
@@ -856,7 +856,7 @@ create synonym  "APEX_OPTION"        for "APX$OPT";
 
 --drop first
 -- drop synonym  "APEX_CONFIG";
--- drop synonym  "APEX_SETTING";
+-- drop synonym  "APEX_SETTINGS";
 
 -- drop sequence "APX$CFG_SEQ";
 -- drop trigger "APX$CFG_BIU_TRG";
@@ -918,7 +918,7 @@ end;
 /
 
 create synonym  "APEX_CONFIG"           for "APX$CFG";
-create synonym  "APEX_SETTING"         for "APX$CFG";
+create synonym  "APEX_SETTINGS"         for "APX$CFG";
 
 
 -------------------------------------------------------------------------------
