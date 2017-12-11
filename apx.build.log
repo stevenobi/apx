@@ -1,0 +1,3973 @@
+SP2-0267: pagesize option 0 out of range (2 through 50000)
+Elapsed: 00:00:00.006
+INSTALL_MESSAGE                               
+-----------------------------------------------
+11.12.2017 16:36:23     Dropping: "APX Objects"
+Elapsed: 00:00:00.005
+
+Dropping DB Model (Tables)
+
+APX$USR_SESSION
+
+Error starting at line : 18 in command -
+drop view "APEX_USER_SESSION"
+Error report -
+SQL Error: ORA-00942: table or view does not exist
+00942. 00000 -  "table or view does not exist"
+*Cause:    
+*Action:
+Elapsed: 00:00:00.013
+
+Error starting at line : 20 in command -
+drop sequence "APX$APP_USERSESS_SEQ"
+Error report -
+SQL Error: ORA-02289: sequence does not exist
+02289. 00000 -  "sequence does not exist"
+*Cause:    The specified sequence does not exist, or the user does
+           not have the required privilege to perform this operation.
+*Action:   Make sure the sequence name is correct, and that you have
+           the right to perform the desired operation on this sequence.
+Elapsed: 00:00:00.013
+
+Error starting at line : 21 in command -
+drop trigger "APX$APP_USERSESS_BI_TRG"
+Error report -
+SQL Error: ORA-04080: trigger 'APX$APP_USERSESS_BI_TRG' does not exist
+04080. 00000 -  "trigger '%s' does not exist"
+*Cause:    The TRIGGER name is invalid.
+*Action:   Check the trigger name.
+Elapsed: 00:00:00.035
+
+Error starting at line : 23 in command -
+drop table "APX$USR_SESSION" purge
+Error report -
+SQL Error: ORA-00942: table or view does not exist
+00942. 00000 -  "table or view does not exist"
+*Cause:    
+*Action:
+Elapsed: 00:00:00.013
+APX$MIME
+Elapsed: 00:00:00.017
+Elapsed: 00:00:00.017
+Elapsed: 00:00:00.038
+Elapsed: 00:00:00.127
+APX$CFG
+Elapsed: 00:00:00.028
+Elapsed: 00:00:00.020
+Elapsed: 00:00:00.014
+Elapsed: 00:00:00.026
+Elapsed: 00:00:00.154
+APX$OPT
+Elapsed: 00:00:00.015
+Elapsed: 00:00:00.013
+Elapsed: 00:00:00.028
+Elapsed: 00:00:00.167
+APX$PRC
+Elapsed: 00:00:00.013
+Elapsed: 00:00:00.016
+Elapsed: 00:00:00.027
+Elapsed: 00:00:00.129
+APX$STATUS
+Elapsed: 00:00:00.020
+Elapsed: 00:00:00.016
+Elapsed: 00:00:00.038
+Elapsed: 00:00:00.118
+APX$CTX
+Elapsed: 00:00:00.016
+Elapsed: 00:00:00.015
+Elapsed: 00:00:00.027
+Elapsed: 00:00:00.152
+APX$
+Elapsed: 00:00:00.015
+Elapsed: 00:00:00.013
+Elapsed: 00:00:00.025
+Elapsed: 00:00:00.117
+
+Dropping Interfaces required
+
+APX$KEY
+
+Error starting at line : 96 in command -
+drop function "APXKEY"
+Error report -
+SQL Error: ORA-04043: object APXKEY does not exist
+04043. 00000 -  "object %s does not exist"
+*Cause:    An object name was specified that was not recognized by the system.
+           There are several possible causes:
+           - An invalid name for a table, view, sequence, procedure, function,
+           package, or package body was entered. Since the system could not
+           recognize the invalid name, it responded with the message that the
+           named object does not exist.
+           - An attempt was made to rename an index or a cluster, or some
+           other object that cannot be renamed.
+*Action:   Check the spelling of the named object and rerun the code. (Valid
+           names of tables, views, functions, etc. can be listed by querying
+           the data dictionary.)
+Elapsed: 00:00:00.012
+APX_ENCRYPT
+
+Error starting at line : 99 in command -
+drop function "APX_ENCRYPT"
+Error report -
+SQL Error: ORA-04043: object APX_ENCRYPT does not exist
+04043. 00000 -  "object %s does not exist"
+*Cause:    An object name was specified that was not recognized by the system.
+           There are several possible causes:
+           - An invalid name for a table, view, sequence, procedure, function,
+           package, or package body was entered. Since the system could not
+           recognize the invalid name, it responded with the message that the
+           named object does not exist.
+           - An attempt was made to rename an index or a cluster, or some
+           other object that cannot be renamed.
+*Action:   Check the spelling of the named object and rerun the code. (Valid
+           names of tables, views, functions, etc. can be listed by querying
+           the data dictionary.)
+Elapsed: 00:00:00.013
+APX_DECRYPT
+
+Error starting at line : 102 in command -
+drop function "APX_DECRYPT"
+Error report -
+SQL Error: ORA-04043: object APX_DECRYPT does not exist
+04043. 00000 -  "object %s does not exist"
+*Cause:    An object name was specified that was not recognized by the system.
+           There are several possible causes:
+           - An invalid name for a table, view, sequence, procedure, function,
+           package, or package body was entered. Since the system could not
+           recognize the invalid name, it responded with the message that the
+           named object does not exist.
+           - An attempt was made to rename an index or a cluster, or some
+           other object that cannot be renamed.
+*Action:   Check the spelling of the named object and rerun the code. (Valid
+           names of tables, views, functions, etc. can be listed by querying
+           the data dictionary.)
+Elapsed: 00:00:00.013
+"APX_GET_VERSION"
+
+Error starting at line : 105 in command -
+drop function "APX_GET_VERSION"
+Error report -
+SQL Error: ORA-04043: object APX_GET_VERSION does not exist
+04043. 00000 -  "object %s does not exist"
+*Cause:    An object name was specified that was not recognized by the system.
+           There are several possible causes:
+           - An invalid name for a table, view, sequence, procedure, function,
+           package, or package body was entered. Since the system could not
+           recognize the invalid name, it responded with the message that the
+           named object does not exist.
+           - An attempt was made to rename an index or a cluster, or some
+           other object that cannot be renamed.
+*Action:   Check the spelling of the named object and rerun the code. (Valid
+           names of tables, views, functions, etc. can be listed by querying
+           the data dictionary.)
+Elapsed: 00:00:00.015
+"APX_CONFIG_VIEWS"
+Elapsed: 00:00:00.017
+Elapsed: 00:00:00.015
+Error starting at line : 110 in command -
+drop view "APEX_MIME_ICON_CLASSES"
+Error report -
+SQL Error: ORA-00942: table or view does not exist
+00942. 00000 -  "table or view does not exist"
+*Cause:    
+*Action:
+Elapsed: 00:00:00.013
+
+Error starting at line : 111 in command -
+drop view "APEX_SEC_CODE_PICKER"
+Error report -
+SQL Error: ORA-00942: table or view does not exist
+00942. 00000 -  "table or view does not exist"
+*Cause:    
+*Action:
+Elapsed: 00:00:00.012
+"APX_SEC_CODE_VIEWS"
+
+Error starting at line : 114 in command -
+drop view "APEX_SEC_CODE3"
+Error report -
+SQL Error: ORA-00942: table or view does not exist
+00942. 00000 -  "table or view does not exist"
+*Cause:    
+*Action:
+Elapsed: 00:00:00.012
+
+Error starting at line : 115 in command -
+drop view "APEX_SEC_CODE4"
+Error report -
+SQL Error: ORA-00942: table or view does not exist
+00942. 00000 -  "table or view does not exist"
+*Cause:    
+*Action:
+Elapsed: 00:00:00.010
+
+Error starting at line : 116 in command -
+drop view "APEX_SEC_CODE6"
+Error report -
+SQL Error: ORA-00942: table or view does not exist
+00942. 00000 -  "table or view does not exist"
+*Cause:    
+*Action:
+Elapsed: 00:00:00.009
+
+Error starting at line : 117 in command -
+drop view "APEX_SEC_CODE_PICKER"
+Error report -
+SQL Error: ORA-00942: table or view does not exist
+00942. 00000 -  "table or view does not exist"
+*Cause:    
+*Action:
+Elapsed: 00:00:00.009
+"APX_GET_TOKEN"
+
+Error starting at line : 120 in command -
+drop function "APX_GET_TOKEN"
+Error report -
+SQL Error: ORA-04043: object APX_GET_TOKEN does not exist
+04043. 00000 -  "object %s does not exist"
+*Cause:    An object name was specified that was not recognized by the system.
+           There are several possible causes:
+           - An invalid name for a table, view, sequence, procedure, function,
+           package, or package body was entered. Since the system could not
+           recognize the invalid name, it responded with the message that the
+           named object does not exist.
+           - An attempt was made to rename an index or a cluster, or some
+           other object that cannot be renamed.
+*Action:   Check the spelling of the named object and rerun the code. (Valid
+           names of tables, views, functions, etc. can be listed by querying
+           the data dictionary.)
+Elapsed: 00:00:00.021
+
+"REGISTER_LOGIN"
+Error starting at line : 124 in command -
+drop procedure "REGISTER_LOGIN"
+Error report -
+SQL Error: ORA-04043: object REGISTER_LOGIN does not exist
+04043. 00000 -  "object %s does not exist"
+*Cause:    An object name was specified that was not recognized by the system.
+           There are several possible causes:
+           - An invalid name for a table, view, sequence, procedure, function,
+           package, or package body was entered. Since the system could not
+           recognize the invalid name, it responded with the message that the
+           named object does not exist.
+           - An attempt was made to rename an index or a cluster, or some
+           other object that cannot be renamed.
+*Action:   Check the spelling of the named object and rerun the code. (Valid
+           names of tables, views, functions, etc. can be listed by querying
+           the data dictionary.)
+Elapsed: 00:00:00.051
+
+Dropping Packages
+
+APX
+
+Error starting at line : 133 in command -
+drop package "APX"
+Error report -
+SQL Error: ORA-04043: object APX does not exist
+04043. 00000 -  "object %s does not exist"
+*Cause:    An object name was specified that was not recognized by the system.
+           There are several possible causes:
+           - An invalid name for a table, view, sequence, procedure, function,
+           package, or package body was entered. Since the system could not
+           recognize the invalid name, it responded with the message that the
+           named object does not exist.
+           - An attempt was made to rename an index or a cluster, or some
+           other object that cannot be renamed.
+*Action:   Check the spelling of the named object and rerun the code. (Valid
+           names of tables, views, functions, etc. can be listed by querying
+           the data dictionary.)
+Elapsed: 00:00:00.024
+
+SP2-0267: pagesize option 0 out of range (2 through 50000)
+SP2-0267: pagesize option 0 out of range (2 through 50000)
+
+Table "APX$" created.
+
+Elapsed: 00:00:00.051
+Unique index "APX$_UNQ1" created.
+
+Elapsed: 00:00:00.031
+
+Unique index "APX$_UNQ2" created.
+
+Elapsed: 00:00:00.026
+
+Sequence "APX$_ID_SEQ" created.
+
+Elapsed: 00:00:00.019
+
+Trigger APX$_BIU_TRG compiled
+
+Elapsed: 00:00:00.069
+Synonym "APEX_APX" created.
+
+Elapsed: 00:00:00.014
+
+1 row inserted.
+
+Elapsed: 00:00:00.007
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.002
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.018
+
+1 row inserted.
+
+Elapsed: 00:00:00.025
+1 row inserted.
+
+Elapsed: 00:00:00.015
+
+1 row inserted.
+
+Elapsed: 00:00:00.019
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.023
+
+1 row inserted.
+
+Elapsed: 00:00:00.025
+1 row inserted.
+
+Elapsed: 00:00:00.014
+
+1 row inserted.
+
+Elapsed: 00:00:00.028
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.008
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+1 row inserted.
+
+Elapsed: 00:00:00.012
+
+1 row inserted.
+
+Elapsed: 00:00:00.022
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.002
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.015
+
+1 row inserted.
+
+Elapsed: 00:00:00.022
+1 row inserted.
+
+Elapsed: 00:00:00.027
+
+1 row inserted.
+
+Elapsed: 00:00:00.030
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+Commit complete.
+
+Elapsed: 00:00:00.003
+Table "APX$CTX" created.
+
+Elapsed: 00:00:00.062
+
+Unique index "APX$CTX_UNQ1" created.
+
+Elapsed: 00:00:00.025
+
+Unique index "APX$CTX_UNQ2" created.
+
+Elapsed: 00:00:00.027
+
+Sequence "APX$CTX_ID_SEQ" created.
+
+Elapsed: 00:00:00.011
+
+Trigger APX$CTX_BIU_TRG compiled
+
+Elapsed: 00:00:00.036
+Synonym "APEX_CONTEXT" created.
+
+Elapsed: 00:00:00.013
+
+1 row inserted.
+
+Elapsed: 00:00:00.006
+
+1 row inserted.
+
+Elapsed: 00:00:00.021
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.034
+
+1 row inserted.
+
+Elapsed: 00:00:00.015
+
+1 row inserted.
+
+Elapsed: 00:00:00.008
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.014
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+Commit complete.
+
+Elapsed: 00:00:00.002
+View "APEX_CONFIG_CONTEXT" created.
+
+Elapsed: 00:00:00.043
+
+Table "APX$STATUS" created.
+
+Elapsed: 00:00:00.052
+
+Unique index "APX$STATUS_UNQ1" created.
+
+Elapsed: 00:00:00.031
+
+Unique index "APX$STATUS_UNQ2" created.
+
+Elapsed: 00:00:00.041
+Index "APX$STATUS_CODE_IDX" created.
+
+Elapsed: 00:00:00.026
+
+Index "APX$STATUS_apx_ID_IDX" created.
+
+Elapsed: 00:00:00.024
+
+Sequence "APX$STATUS_ID_SEQ" created.
+
+Elapsed: 00:00:00.028
+
+Trigger APX$STATUS_BIU_TRG compiled
+Elapsed: 00:00:00.053
+
+Synonym "APEX_STATUS" created.
+
+Elapsed: 00:00:00.022
+
+1 row inserted.
+
+Elapsed: 00:00:00.012
+
+1 row inserted.
+
+Elapsed: 00:00:00.007
+
+1 row inserted.
+
+Elapsed: 00:00:00.006
+
+1 row inserted.
+
+Elapsed: 00:00:00.010
+
+1 row inserted.
+
+Elapsed: 00:00:00.007
+
+1 row inserted.
+
+Elapsed: 00:00:00.006
+
+1 row inserted.
+
+Elapsed: 00:00:00.011
+
+1 row inserted.
+
+Elapsed: 00:00:00.009
+1 row inserted.
+
+Elapsed: 00:00:00.008
+
+1 row inserted.
+
+Elapsed: 00:00:00.009
+
+1 row inserted.
+
+Elapsed: 00:00:00.007
+
+1 row inserted.
+
+Elapsed: 00:00:00.009
+
+1 row inserted.
+
+Elapsed: 00:00:00.008
+
+1 row inserted.
+
+Elapsed: 00:00:00.028
+
+1 row inserted.
+
+Elapsed: 00:00:00.014
+
+1 row inserted.
+
+Elapsed: 00:00:00.013
+
+Commit complete.
+
+Elapsed: 00:00:00.002
+View "APEX_CONFIG_STATUS" created.
+
+Elapsed: 00:00:00.014
+
+Table "APX$PRC" created.
+
+Elapsed: 00:00:00.083
+Unique index "APX$PRC_UNQ1" created.
+
+Elapsed: 00:00:00.020
+
+Unique index "APX$PRC_UNQ2" created.
+
+Elapsed: 00:00:00.024
+
+Sequence "APX$PRC_ID_SEQ" created.
+
+Elapsed: 00:00:00.010
+
+Trigger APX$PRC_BIU_TRG compiled
+
+Elapsed: 00:00:00.034
+
+Synonym "APEX_PROCESS" created.
+
+Elapsed: 00:00:00.011
+
+1 row inserted.
+
+Elapsed: 00:00:00.008
+
+1 row inserted.
+
+Elapsed: 00:00:00.007
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+Commit complete.
+
+Elapsed: 00:00:00.002
+Table "APX$OPT" created.
+
+Elapsed: 00:00:00.082
+
+Unique index "APX$OPT_UNQ1" created.
+
+Elapsed: 00:00:00.026
+Unique index "APX$OPT_UNQ2" created.
+
+Elapsed: 00:00:00.036
+
+Sequence "APX$OPT_ID_SEQ" created.
+
+Elapsed: 00:00:00.035
+
+Trigger APX$OPT_BIU_TRG compiled
+
+Elapsed: 00:00:00.038
+
+Synonym "APEX_OPTION" created.
+
+Elapsed: 00:00:00.012
+Table "APX$CFG" created.
+
+Elapsed: 00:00:00.117
+
+Unique index "APX$CFG_UNQ1" created.
+
+Elapsed: 00:00:00.023
+
+Unique index "APX$CFG_UNQ2" created.
+
+Elapsed: 00:00:00.036
+
+Index "APX$CFG_STAT" created.
+
+Elapsed: 00:00:00.030
+Index "APX$CFG_CONTEXT" created.
+
+Elapsed: 00:00:00.022
+
+Sequence "APX$CFG_SEQ" created.
+
+Elapsed: 00:00:00.013
+
+Trigger APX$CFG_BIU_TRG compiled
+
+Elapsed: 00:00:00.034
+
+Synonym "APEX_CONFIG" created.
+
+Elapsed: 00:00:00.012
+
+Synonym "APEX_SETTING" created.
+
+Elapsed: 00:00:00.012
+
+1 row inserted.
+
+Elapsed: 00:00:00.009
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.037
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+Commit complete.
+
+Elapsed: 00:00:00.002
+
+Table "APX$MIME" created.
+
+Elapsed: 00:00:00.043
+Unique index "APX$MIME_UNQ1" created.
+
+Elapsed: 00:00:00.041
+
+Unique index "APX$MIME_UNQ2" created.
+
+Elapsed: 00:00:00.031
+
+Index "APX$MIMETYPEMEDIA_FK" created.
+
+Elapsed: 00:00:00.019
+
+Sequence "APX$MIME_SEQ" created.
+
+Elapsed: 00:00:00.011
+
+Trigger APX$MIME_BIU_TRG compiled
+
+Elapsed: 00:00:00.041
+Synonym "APEX_MIME_TYPES" created.
+
+Elapsed: 00:00:00.010
+
+1 row inserted.
+
+Elapsed: 00:00:00.006
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.019
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.018
+
+1 row inserted.
+
+Elapsed: 00:00:00.019
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.002
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.006
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.006
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.006
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.002
+
+1 row inserted.
+
+Elapsed: 00:00:00.002
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.002
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.008
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.017
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.006
+
+1 row inserted.
+
+Elapsed: 00:00:00.002
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+1 row inserted.
+
+Elapsed: 00:00:00.002
+
+1 row inserted.
+
+Elapsed: 00:00:00.002
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.006
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.007
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.038
+
+1 row inserted.
+
+Elapsed: 00:00:00.031
+
+1 row inserted.
+
+Elapsed: 00:00:00.017
+
+1 row inserted.
+
+Elapsed: 00:00:00.058
+
+1 row inserted.
+
+Elapsed: 00:00:00.006
+
+1 row inserted.
+
+Elapsed: 00:00:00.031
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.025
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.007
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.006
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.009
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.019
+1 row inserted.
+
+Elapsed: 00:00:00.025
+
+1 row inserted.
+
+Elapsed: 00:00:00.011
+
+1 row inserted.
+
+Elapsed: 00:00:00.019
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.023
+
+1 row inserted.
+
+Elapsed: 00:00:00.009
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.006
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.002
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.002
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.002
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.038
+
+1 row inserted.
+
+Elapsed: 00:00:00.018
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.017
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.006
+
+1 row inserted.
+
+Elapsed: 00:00:00.011
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.030
+
+1 row inserted.
+
+Elapsed: 00:00:00.011
+
+1 row inserted.
+
+Elapsed: 00:00:00.006
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.015
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.002
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+1 row inserted.
+
+Elapsed: 00:00:00.035
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.007
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.002
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.002
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.002
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.005
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+1 row inserted.
+
+Elapsed: 00:00:00.002
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.002
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.002
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.006
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.010
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+1 row inserted.
+
+Elapsed: 00:00:00.032
+
+1 row inserted.
+
+Elapsed: 00:00:00.029
+
+1 row inserted.
+
+Elapsed: 00:00:00.036
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.008
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.002
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.002
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.008
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.010
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+1 row inserted.
+
+Elapsed: 00:00:00.003
+
+1 row inserted.
+
+Elapsed: 00:00:00.004
+
+Commit complete.
+
+Elapsed: 00:00:00.008
+646 rows updated.
+
+Elapsed: 00:00:00.285
+
+Commit complete.
+
+Elapsed: 00:00:00.006
+
+View "APEX_MIME_ICON_CLASSES" created.
+
+Elapsed: 00:00:00.020
+
+9 rows updated.
+
+Elapsed: 00:00:00.018
+
+Commit complete.
+
+Elapsed: 00:00:00.003
+
+68 rows updated.
+
+Elapsed: 00:00:00.036
+
+Commit complete.
+
+Elapsed: 00:00:00.003
+328 rows updated.
+
+Elapsed: 00:00:00.117
+
+Commit complete.
+
+Elapsed: 00:00:00.005
+
+41 rows updated.
+
+Elapsed: 00:00:00.027
+
+Commit complete.
+
+Elapsed: 00:00:00.003
+
+32 rows updated.
+
+Elapsed: 00:00:00.018
+
+Commit complete.
+
+Elapsed: 00:00:00.003
+
+70 rows updated.
+
+Elapsed: 00:00:00.031
+
+Commit complete.
+
+Elapsed: 00:00:00.003
+3 rows updated.
+
+Elapsed: 00:00:00.008
+
+Commit complete.
+
+Elapsed: 00:00:00.003
+
+1 row updated.
+
+Elapsed: 00:00:00.007
+
+Commit complete.
+
+Elapsed: 00:00:00.003
+
+11 rows updated.
+
+Elapsed: 00:00:00.011
+
+Commit complete.
+
+Elapsed: 00:00:00.002
+
+1 row updated.
+
+Elapsed: 00:00:00.019
+
+Commit complete.
+
+Elapsed: 00:00:00.003
+
+99 rows updated.
+
+Elapsed: 00:00:00.040
+
+Commit complete.
+
+Elapsed: 00:00:00.003
+47 rows updated.
+
+Elapsed: 00:00:00.035
+
+Commit complete.
+
+Elapsed: 00:00:00.003
+
+12 rows updated.
+
+Elapsed: 00:00:00.011
+
+Commit complete.
+
+Elapsed: 00:00:00.003
+
+0 rows updated.
+
+Elapsed: 00:00:00.005
+
+Commit complete.
+
+Elapsed: 00:00:00.001
+
+Table "APX$USR_SESSION" created.
+
+Elapsed: 00:00:00.042
+
+Sequence "APX$APP_USERSESS_SEQ" created.
+
+Elapsed: 00:00:00.014
+Trigger APX$APP_USERSESS_BI_TRG compiled
+
+Elapsed: 00:00:00.050
+
+View "APEX_USER_SESSION" created.
+
+Elapsed: 00:00:00.020
+Function APX_GET_VERSION compiled
+
+Elapsed: 00:00:00.063
+Function APXKEY compiled
+
+Elapsed: 00:00:00.149
+
+Function APX_ENCRYPT compiled
+
+Elapsed: 00:00:00.041
+
+Function APX_DECRYPT compiled
+
+Elapsed: 00:00:00.041
+View "APEX_SEC_CODE3" created.
+
+Elapsed: 00:00:00.037
+
+View "APEX_SEC_CODE4" created.
+
+Elapsed: 00:00:00.020
+
+View "APEX_SEC_CODE6" created.
+
+Elapsed: 00:00:00.031
+
+View "APEX_SEC_CODE_PICKER" created.
+
+Elapsed: 00:00:00.034
+Function APX_GET_TOKEN compiled
+
+Elapsed: 00:00:00.080
+Package APX compiled
+
+Elapsed: 00:00:00.188
+Package body APX compiled
+
+Elapsed: 00:00:00.222
+
+Package "APX" Errors:
+
+no rows selected
+
+
+ 0 rows selected 
+
+Elapsed: 00:00:00.025
+Done compiling Package "APX" :-)
+
+"APX" provided interfaces
+
+"REGISTER_LOGIN"
+
+Procedure REGISTER_LOGIN compiled
+
+Elapsed: 00:00:00.026
+SP2-0267: pagesize option 0 out of range (2 through 50000)
+SP2-0584: EXIT variable "SQL.SQLCODE" was non-numeric
+Usage: { EXIT | QUIT }  [ SUCCESS | FAILURE | WARNING | n |
+<variable> | :<bindvariable> ]  [ COMMIT | ROLLBACK ]
+Disconnected from Oracle Database 11g Release 11.2.0.4.0 - 64bit Production
+With the Real Application Clusters and Automatic Storage Management options

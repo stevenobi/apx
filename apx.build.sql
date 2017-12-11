@@ -2353,13 +2353,13 @@ commit;
 
 update "APX$MIME" m
 set m.mime_type_class_id = (
-select apx_id from (
-  select a.apx_id
+select b.apx_id from (
+  select a.apx_id, a.apx_object
   from "APX$" a
-  where lower(a.apx_object) = substr(m.mime_type, 1, instr(m.mime_type, '/') -1)
-  and a.apx_parent_object_id = (select b.apx_id
+  where a.apx_parent_object_id = (select b.apx_id
                                 from "APX$" b
-                                where b.apx_obj_code = 'MTC'))
+                                where b.apx_obj_code = 'MTC')) b
+where lower(b.apx_object) = substr(m.mime_type, 1, instr(m.mime_type, '/') -1)
 );
 
 commit;
