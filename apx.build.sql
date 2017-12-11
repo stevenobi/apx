@@ -1,9 +1,11 @@
 
 ---------------------------------------------------------------
-       ---- 17.12.04 00:10 Begin of SQL Build Project ----
+       ---- 17.12.11 23:23 Begin of SQL Build APX ----
 
---whenever oserror exit
---whenever sqlerror exit sql.sqlcode;
+
+-- SQL Drop File
+-- whenever oserror exit;
+-- whenever sqlerror exit sql.sqlcode;
 set pages 0 line 120 define on verify off set feed off
 alter session set nls_date_format='DD.MM.YYYY HH24:MI:SS';
 select sysdate || '     Dropping: "&1. Objects"' as install_message
@@ -34,7 +36,7 @@ drop table "APX$MIME" purge;
 
 prompt APX$CFG
 drop synonym  "APEX_CONFIG";
-drop synonym  "APEX_SETTINGS";
+drop synonym  "APEX_SETTING";
 
 drop sequence "APX$CFG_SEQ";
 drop trigger "APX$CFG_BIU_TRG";
@@ -108,7 +110,6 @@ prompt "APX_CONFIG_VIEWS"
 drop view "APEX_CONFIG_CONTEXT";
 drop view "APEX_CONFIG_STATUS";
 drop view "APEX_MIME_ICON_CLASSES";
-drop view "APEX_SEC_CODE_PICKER";
 
 prompt "APX_SEC_CODE_VIEWS"
 drop view "APEX_SEC_CODE3";
@@ -138,6 +139,8 @@ prompt
 set pages 0 line 120 define off verify off set feed off timing off
 
 --exit;
+
+---------------------------------------------------------------
 
 ---------------------------------------------------------------
 --whenever oserror exit
@@ -918,7 +921,7 @@ end;
 /
 
 create synonym  "APEX_CONFIG"           for "APX$CFG";
-create synonym  "APEX_SETTINGS"         for "APX$CFG";
+create synonym  "APEX_SETTING"         for "APX$CFG";
 
 
 -------------------------------------------------------------------------------
@@ -2350,15 +2353,28 @@ values ('.zsh','text/x-script.zsh', null, null,null,null,'fa-file-o','fff','fff'
 
 commit;
 
+/* -- 12c validated
+update "APX$MIME" m
+set m.mime_type_class_id = (
+select apx_id from (
+  select a.apx_id
+  from "APX$" a
+  where lower(a.apx_object) = substr(m.mime_type, 1, instr(m.mime_type, '/') -1)
+  and a.apx_parent_object_id = (select b.apx_id
+                                from "APX$" b
+                                where b.apx_obj_code = 'MTC'))
+);
+*/
 
+-- 11g validated
 update "APX$MIME" m
 set m.mime_type_class_id = (
 select b.apx_id from (
   select a.apx_id, a.apx_object
   from "APX$" a
   where a.apx_parent_object_id = (select b.apx_id
-                                from "APX$" b
-                                where b.apx_obj_code = 'MTC')) b
+                                  from "APX$" b
+                                  where b.apx_obj_code = 'MTC')) b
 where lower(b.apx_object) = substr(m.mime_type, 1, instr(m.mime_type, '/') -1)
 );
 
@@ -3901,6 +3917,6 @@ end;
 set pages 0 line 120 define off verify off set feed off timing off
 
 EXIT SQL.SQLCODE;
-       ---- 17.12.04 00:10  End of SQL Build Project  ----
+       ---- 17.12.11 23:23  End of SQL Build APX  ----
 ---------------------------------------------------------------
 
