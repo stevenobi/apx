@@ -1,6 +1,6 @@
 
 ---------------------------------------------------------------
-       ---- 17.12.13 23:46 Begin of SQL Build APX ----
+       ---- 17/12/13 23:49 Begin of SQL Build APX ----
 
 
 -- SQL Drop File
@@ -4311,6 +4311,6 @@ end;
 set pages 0 line 120 define off verify off feed off echo off timing off
 
 EXIT SQL.SQLCODE;
-       ---- 17.12.13 23:46  End of SQL Build APX  ----
+       ---- 17/12/13 23:49  End of SQL Build APX  ----
 ---------------------------------------------------------------
 
