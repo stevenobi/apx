@@ -1,12 +1,12 @@
 
 ---------------------------------------------------------------
-       ---- 17.12.11 23:23 Begin of SQL Build APX ----
+       ---- 17.12.13 23:17 Begin of SQL Build APX ----
 
 
 -- SQL Drop File
 -- whenever oserror exit;
--- whenever sqlerror exit sql.sqlcode;
-set pages 0 line 120 define on verify off set feed off
+--whenever sqlerror exit sql.sqlcode;
+set pages 0 line 120 define on verify off feed off echo off
 alter session set nls_date_format='DD.MM.YYYY HH24:MI:SS';
 select sysdate || '     Dropping: "&1. Objects"' as install_message
 from dual;
@@ -16,6 +16,15 @@ prompt
 prompt Dropping DB Model (Tables)
 prompt
 
+prompt APX$SOURCE
+drop synonym  "APEX_SOURCE";
+
+drop sequence "APX$SOURCE_ID_SEQ";
+drop trigger "APX$SOURCE_BIU_TRG";
+
+drop table "APX$SOURCE" purge;
+
+
 prompt APX$USR_SESSION
 drop view "APEX_USER_SESSION";
 
@@ -23,6 +32,15 @@ drop sequence "APX$APP_USERSESS_SEQ";
 drop trigger "APX$APP_USERSESS_BI_TRG";
 
 drop table "APX$USR_SESSION" purge;
+
+
+prompt APX$APP
+drop synonym  "APEX_APP";
+
+drop sequence "APX$APP_ID_SEQ";
+drop trigger "APX$APP_BIU_TRG";
+
+drop table "APX$APP" purge;
 
 
 prompt APX$MIME
@@ -72,7 +90,7 @@ drop table       "APX$STATUS" purge;
 
 
 prompt APX$CTX
-drop synonym  "APEX_CONTEXT";
+drop synonym  "APEX_SYS_CONTEXT";
 
 drop sequence "APX$CTX_ID_SEQ";
 drop trigger "APX$CTX_BIU_TRG";
@@ -107,7 +125,6 @@ prompt "APX_GET_VERSION"
 drop function "APX_GET_VERSION";
 
 prompt "APX_CONFIG_VIEWS"
-drop view "APEX_CONFIG_CONTEXT";
 drop view "APEX_CONFIG_STATUS";
 drop view "APEX_MIME_ICON_CLASSES";
 
@@ -116,6 +133,17 @@ drop view "APEX_SEC_CODE3";
 drop view "APEX_SEC_CODE4";
 drop view "APEX_SEC_CODE6";
 drop view "APEX_SEC_CODE_PICKER";
+
+prompt "APEX_OBJECTS"
+drop view "APEX_OBJECTS";
+
+
+prompt  "APEX_CONTEXT"
+drop view  "APEX_CONTEXT";
+
+prompt APEX_CONFIG
+drop view "APEX_CONFIG_CONTEXT";
+drop view "APEX_CONFIGURATION";
 
 prompt "APX_GET_TOKEN"
 drop function "APX_GET_TOKEN";
@@ -132,11 +160,11 @@ prompt Dropping Packages
 prompt
 prompt APX
 drop package "APX";
-
 prompt
+
 ---------------------------------------------------------------
 
-set pages 0 line 120 define off verify off set feed off timing off
+set pages 0 line 120 define off verify off feed off echo off timing off
 
 --exit;
 
@@ -145,7 +173,7 @@ set pages 0 line 120 define off verify off set feed off timing off
 ---------------------------------------------------------------
 --whenever oserror exit
 whenever sqlerror exit sql.sqlcode;
-set pages 0 line 120 define on verify off set feed on timing on
+set pages 0 line 120 define on verify off feed on timing on echo off
 
 -----------------------------------------------------------------------------------------------------
 -- Apex Object Table to provides Types and Indetifiers to the APX Schema
@@ -206,11 +234,34 @@ end;
 create synonym  "APEX_APX"               for "APX$";
 
 -------------------------------------------------------------------------------------------------
+-- Views on APX$
+
+-- APEX_OBJECTS View
+create view "APEX_OBJECTS"
+as
+select
+    a.apx_id as apex_object_id,
+    a.apx_object as apex_object,
+    a.apx_obj_code as apex_object_code,
+    (select b.apx_object from "APX$" b
+     where b.apx_id = a.apx_parent_object_id) as apex_parent_object,
+    a.apx_sec_level as security_level,
+    a.app_id,
+    a.apx_object_is_generic as object_is_generic,
+    a.created,
+    a.created_by,
+    a.modified,
+    a.modified_by
+FROM "APEX_APX" a
+order by 1;
+
+
+-------------------------------------------------------------------------------------------------
 -- INSERTING into APX$
 set define off;
 
 insert into "APX$" (apx_id, apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values (0,  'DEFAULT', null, null, 0, 0);
+values (0,  'SYSTEM', null, null, 0, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
 values ('APPLICATION', 'APP', null, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
@@ -224,169 +275,257 @@ values ('USER', 'USR', null, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
 values ('PROCESS', 'PRC', null, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('CONTEXT', 'CTX', null, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('OPTION', 'OPT', null, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('CONFIGURATION', 'CONFIG', null, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
 values ('LANGUAGE', 'LANG', null, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
 values ('METHOD', 'METH', null, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
 values ('ARGUMENT', 'ARG', null, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('APPLICATION PROGRAMMING INTERFACE', 'API', null, 1, 0);
+values ('CLASS', 'CLASS', null, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('FRAMEWORK', 'FRW', null, 1, 0);
+values ('OBJECT', 'OBJ', null, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('TYPE', 'TYPE', null, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('SERVICE', 'SRV', null, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('SCHEDULE', 'JOB', null, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
 values ('PROTOCOL', 'PROT', null, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('FRAMEWORK', 'FRW', null, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
 values ('FORMAT', 'FRM', null, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('APPLICATION_PROCESS', 'APPRC', 1, 1, 0);
+values ('CODE', 'CODE', null, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('PL/SQL', 'PLSQL', '7', 1, 0);
+values ('TEXT', 'TXT', null, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('JAVASCRIPT', 'JS', '7', 1, 0);
+values ('APPLICATION PROGRAMMING INTERFACE', 'API', null, 1, 0);
+-- sub types
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('JQUERY', 'JQ', '7', 1, 0);
+values ('DATA', 'DAT', 14, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('ANGULAR', 'NG', '7', 1, 0);
+values ('TOKEN', 'TKN', 2, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('TYPESCRIPT', 'TS', '7', 1, 0);
+values ('REALM', 'REALM', 2, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('SASS', 'SASS', '7', 1, 0);
+values ('APPLICATION_PROCESS', 'APPRC', 6, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('SCSS', 'SCSS', '7', 1, 0);
+values ('SQL', 'SQL', 10, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('CSS', 'CSS', '7', 1, 0);
+values ('PL/SQL', 'PLSQL', 10, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('HTML', 'HTML', '7', 1, 0);
+values ('JAVASCRIPT', 'JS', 10, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('JSON', 'JSON', 13, 1, 0);
+values ('JQUERY', 'JQ', 10, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('CSV', 'CVS', 13, 1, 0);
+values ('ANGULAR', 'NG', 10, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('XML', 'XML', 13, 1, 0);
+values ('TYPESCRIPT', 'TS', 10, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('XTD', 'XTD', 13, 1, 0);
+values ('SASS', 'SASS', 10, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('PDF', 'PDF', 13, 1, 0);
+values ('SCSS', 'SCSS', 10, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('IMAGE', 'IMG', 13, 1, 0);
+values ('CSS', 'CSS', 10, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('BINARY', 'BIN', 13, 1, 0);
+values ('HTML', 'HTML', 10, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('CHARACTER', 'CHAR', 13, 1, 0);
+values ('CALL', 'CALL', 11, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('SOAP', 'SOAP', '12', 1, 0);
+values ('ASYNC_CALL', 'ASYNC', 11, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('REST_API', 'REST', '12', 1, 0);
+values ('SOAP', 'SOAP', 11, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('ASYNC_CALL', 'AJAX', '12', 1, 0);
+values ('AJAX', 'AJAX', 11, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('CALLBACK', 'CB', '12', 1, 0);
+values ('CALLBACK', 'CB', 11, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('STREAM', 'STREAM', '12', 1, 0);
+values ('REST', 'REST', 23, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('TYPE', 'TYPE', '7', 1, 0);
+values ('HTTP', 'HTTP', 18, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('OBJECT', 'OBJ', '37', 1, 0);
+values ('HTTPS', 'HTTPS', 18, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('ARRAY', 'ARR', '37', 1, 0);
+values ('FTP', 'FTP', 18, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('STRING', 'STR', '37', 1, 0);
+values ('FTPS', 'FTPS', 18, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('NUMBER', 'INT', '37', 1, 0);
+values ('SSH', 'SSH', 18, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('DATE', 'DATE', '37', 1, 0);
+values ('TELNET', 'TELNET', 18, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('BOOLEAN', 'BOOL', '37', 1, 0);
+values ('SQLNET', 'SQLNET', 18, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('IDENTIFIER', 'ID', '38', 1, 0);
+values ('NAMED_PIPES', 'NP', 18, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('VALUE', 'VAL', '38', 1, 0);
+values ('STREAM', 'STREAM', 18, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('REALM', 'REALM', '2', 1, 0);
+values ('JSON', 'JSON', 20, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('TOKEN', 'TKN', '2', 1, 0);
+values ('CSV', 'CVS', 20, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('CALL', 'CALL', '8', 1, 0);
+values ('XML', 'XML', 20, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('PACKAGE', 'PKG', 15, 1, 0);
+values ('XTD', 'XTD', 20, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('PACKAGE_SPEC', 'PKS', 15, 1, 0);
+values ('XLS', 'XLS', 20, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('PACKAGE_BODY', 'PKB', 15, 1, 0);
+values ('PDF', 'PDF', 20, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('PROCEDURE', 'PRC', 15, 1, 0);
+values ('IMAGE', 'IMG', 20, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('FUNCTION', 'FNC', 15, 1, 0);
+values ('BINARY', 'BIN', 20, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('FUNCTION_BODY_RETURNING_BOOLEAN', 'FNCRB', 2, 1, 0);
+values ('CHARACTER', 'CHAR', 20, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('TRIGGER', 'TRG', 15, 1, 0);
+values ('OBJECT', 'JSOBJ', 30, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('FUNCTION', 'JSFNC', 16, 1, 0);
+values ('ARRAY', 'JSARR', 30, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('VARIABLE', 'JSVAR', 16, 1, 0);
+values ('STRING', 'JSSTR', 30, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('OBJECT', 'JSOBJ', 16, 1, 0);
+values ('NUMBER', 'JSINT', 30, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('REQUEST', 'REQ', 12, 1, 0);
+values ('DATE', 'JSDATE', 30, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('RESPONSE', 'RSP', 58, 1, 0);
+values ('BOOLEAN', 'JSBOOL', 30, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('GET', 'GET', 58, 1, 0);
+values ('FUNCTION', 'JSFNC', 30, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('PUT', 'PUT', 58, 2, 0);
+values ('VARIABLE', 'JSVAR', 30, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('POST', 'POST', 58, 3, 0);
+values ('CONSTANT', 'JSCONST', 30, 1, 0);
 insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('DELETE', 'DEL', 58, 4, 0);
-Insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('MIME_TYPE_CLASS','MTC',13,1,0);
-Insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('APPLICATION','MAPP',65,1,0);
-Insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('AUDIO','MAUDIO',65,1,0);
-Insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('CHEMICAL','MCHEM',65,1,0);
-Insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('DRAWING','MDRAW',65,1,0);
-Insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('I-WORLD','MIWRLD',65,1,0);
-Insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('IMAGE','MIMG',65,1,0);
-Insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('MESSAGE','MMSG',65,1,0);
-Insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('MODEL','MMOD',65,1,0);
-Insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('MULTIPART','MMULTI',65,1,0);
-Insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('MUSIC','MMUSIC',65,1,0);
-Insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('PALEOVU','MPAVL',65,1,0);
-Insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('TEXT','MTXT',65,1,0);
-Insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('VIDEO','MVIDEO',65,1,0);
-Insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('WINDOWS','MWIN',65,1,0);
-Insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('WWW','MWWW',65,1,0);
-Insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('X-CONFERENCE','MXCONF',65,1,0);
-Insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('X-MUSIC','MXMUSIC',65,1,0);
-Insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('X-WORLD','MXWRLD',65,1,0);
-Insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
-values ('XGL','MXGL',65,1,0);
-
-
+values ('IDENTIFIER', 'ID', 12, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('VALUE', 'VAL', 12, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('INSERT', 'INS', 28, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('UPDATE', 'UPD', 28, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('MERGE', 'MERGE', 28, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('DELETE', 'DEL', 28, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('SELECT', 'SEL', 28, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('CREATE', 'CRE', 28, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('DROP', 'DRP', 28, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('ALTER', 'ALT', 28, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('GRANT', 'GRANT', 28, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('REVOKE', 'REV', 28, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('TABLE', 'TAB', 28, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('INDEX ', 'IDX', 28, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('MATERIALIZED_VIEW', 'MV', 28, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('VIEW', 'VW', 28, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('SEQUENCE', 'SEQ', 28, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('PACKAGE', 'PKG', 29, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('PACKAGE_SPEC', 'PKS', 29, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('PACKAGE_BODY', 'PKB', 29, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('PROCEDURE', 'PRC', 29, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('FUNCTION', 'FNC', 29, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('TRIGGER', 'TRG', 29, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('FUNCTION_BODY_RETURNING_BOOLEAN', 'FNCRB', 29, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('REQUEST', 'REQ', 44, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('RESPONSE', 'RSP', 95, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('GET', 'GET', 95, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('PUT', 'PUT', 95, 2, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('POST', 'POST', 95, 3, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('DELETE', 'DELETE', 95, 4, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('MIME_TYPE_CLASS','MTC', 36, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('APPLICATION','MAPP', 101, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('AUDIO','MAUDIO', 101, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('CHEMICAL','MCHEM', 101, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('DRAWING','MDRAW', 101, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('I-WORLD','MIWRLD', 101, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('IMAGE','MIMG', 101, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('MESSAGE','MMSG', 101, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('MODEL','MMOD', 101, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('MULTIPART','MMULTI', 101, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('MUSIC','MMUSIC', 101, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('PALEOVU','MPAVL', 101, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('TEXT','MTXT', 101, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('VIDEO','MVIDEO', 101, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('WINDOWS','MWIN', 101, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('WWW','MWWW', 101, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('X-CONFERENCE','MXCONF', 101, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('X-MUSIC','MXMUSIC', 101, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('X-WORLD','MXWRLD', 101, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('XGL','MXGL', 101, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('SECURE_SOCKET_LAYER','SSL', 2, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('CERTIFICATE','CERT', 2, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('KEY','KEY', 2, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('AUTHORIZATION','AUTHORIZE', 2, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('AUTHENTICATION', 'AUTH', 2, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('OAUTH', 'OAUTH', 125, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('CREDENTIALS', 'CRED', 2, 1, 0);
+insert into "APX$" (apx_object, apx_obj_code, apx_parent_object_id, apx_sec_level, app_id)
+values ('PUBLIC_PRIVATE_KEY', 'PPK', 2, 1, 0);
 
 commit;
+
 -----------------------------------------------------------------------------------------------------
 -- App Processes Table (Procedures,  Functions,  Authorization Items, ...)
 
--- drop first
+-- -- drop first
 -- drop synonym  "APX_CONTEXT";
 
 -- drop sequence "APX$CTX_ID_SEQ";
@@ -397,7 +536,7 @@ commit;
 -----------------------------------------------------------------------------------------------------
 -- App Processes Table (Procedures,  Functions,  Authorization Items, ...)
 create table "APX$CTX"(
-apx_ctx_id number not null,  -- extra field for certain predefined values like 0,  1, ...
+apx_context_id number not null,  -- extra field for certain predefined values like 0,  1, ...
 apx_context varchar2(128) not null,
 apx_context_value varchar2(4000),
 apx_context_code varchar2(12),
@@ -405,20 +544,25 @@ apx_parent_context_id number,
 apx_sub_context_id number,
 apx_context_sec_level number default 0,
 apx_context_type_id number,
+apx_context_subtype_id number,
 app_id number,
 apx_context_is_generic number generated always as (case when app_id = 0 then 1 else 0 end),
 created date,
 created_by varchar2(64),
 modified date,
 modified_by varchar2(64),
-constraint "APX$CTX_ID" primary key (apx_ctx_id),
+constraint "APX$CTX_ID" primary key (apx_context_id),
 constraint "APX$CTX_TYPE_FK" foreign key (apx_context_type_id) references "APX$"(apx_id) on delete set null,
-constraint "APX$CTX_PARENT_FK" foreign key (apx_parent_context_id) references "APX$CTX"(apx_ctx_id),
-constraint "APX$CTX_SUB_FK" foreign key (apx_sub_context_id) references "APX$CTX"(apx_ctx_id)
+constraint "APX$CTX_SUBTYPE_FK" foreign key (apx_context_subtype_id) references "APX$"(apx_id) on delete set null,
+constraint "APX$CTX_PARENT_FK" foreign key (apx_parent_context_id) references "APX$CTX"(apx_context_id),
+constraint "APX$CTX_SUBCONTEXT_FK" foreign key (apx_sub_context_id) references "APX$CTX"(apx_context_id)
 );
 
-create unique index "APX$CTX_UNQ1" on "APX$CTX"(apx_ctx_id, app_id);
+create unique index "APX$CTX_UNQ1" on "APX$CTX"(apx_context_id, app_id);
 create unique index "APX$CTX_UNQ2" on "APX$CTX"(upper(apx_context),  upper(apx_context_code), app_id);
+create index "APX$CTX_TYPE_FK" on "APX$CTX" (apx_context_type_id);
+create index "APX$CTX_SUBTYPE_FK" on "APX$CTX" (apx_context_subtype_id);
+create index "APX$CTX_SUBCONTEXT_FK" on "APX$CTX" (apx_sub_context_id);
 
 create sequence "APX$CTX_ID_SEQ" start with 1 increment by 1 nocache;
 
@@ -428,9 +572,9 @@ referencing old as old new as new
 for each row
 begin
   if inserting then
-    if (:new.apx_ctx_id is null) then
+    if (:new.apx_context_id is null) then
         select "APX$CTX_ID_SEQ".NEXTVAL
-        into :new.apx_ctx_id
+        into :new.apx_context_id
         from dual;
     end if;
     select sysdate,  nvl(v('APP_USER'),  user)
@@ -444,14 +588,59 @@ begin
 end;
 /
 
-create synonym  "APEX_CONTEXT"               for "APX$CTX";
+create synonym  "APEX_SYS_CONTEXT"               for "APX$CTX";
+
+
+-------------------------------------------------------------------------------------------------
+-- Views on APX$CTX
+
+create view  "APEX_CONTEXT"
+as
+select
+    ctx.apx_context_id as apex_context_id,
+    ctx.apx_context_code as apx_context_code,
+    ctx.apx_context as apex_context,
+    ctx.apx_sub_context_id as apex_sub_context,
+    ctx.apx_context_value as apex_context_value,
+    ctx.apx_parent_context_id as apex_parent_context_id,
+    (select b.apx_context from "APEX_SYS_CONTEXT" b
+     where b.apx_context_id = ctx.apx_parent_context_id) as apex_parent_context,
+    ctx.apx_context_sec_level as security_level,
+    ctx.apx_context_type_id as apex_object_id,
+    apx.apex_object as apex_object,
+    ctx.apx_context_subtype_id as apex_sub_object_id,
+    apxsub.apex_object as apex_subobject,
+    ctx.app_id as app_id,
+    ctx.apx_context_is_generic as is_generic_context,
+    ctx.created,
+    ctx.created_by,
+    ctx.modified,
+    ctx.modified_by
+FROM "APEX_SYS_CONTEXT" ctx
+left outer join "APEX_OBJECTS" apx
+on (ctx.apx_context_type_id = apx.apex_object_id)
+left outer join "APEX_OBJECTS" apxsub
+on (ctx.apx_context_subtype_id = apxsub.apex_object_id)
+order by 1;
+
+
+-- APEX LOV for Apex Config
+create view "APEX_CONFIG_CONTEXT"
+as
+SELECT
+    ctx.apx_context_id as config_context_id,
+    ctx.apx_context as config_context
+FROM
+    "APEX_SYS_CONTEXT" ctx
+order by 1;
+
 
 
 -------------------------------------------------------------------------------------------------
 -- INSERTING into APX$CTX
 set define off;
 
-insert into "APX$CTX" (apx_ctx_id, apx_context, apx_context_code, apx_parent_context_id, apx_context_sec_level, app_id)
+insert into "APX$CTX" (apx_context_id, apx_context, apx_context_code, apx_parent_context_id, apx_context_sec_level, app_id)
 values (0,  'DEFAULT', null, null, 0, 0);
 insert into "APX$CTX" (apx_context, apx_context_code, apx_parent_context_id, apx_context_sec_level, app_id)
 values ('HOST', 'HOST', null, 1, 0);
@@ -532,18 +721,14 @@ values ('PRODUCTION', 'PRD', null, 1, 0);
 insert into "APX$CTX" (apx_context, apx_context_code, apx_parent_context_id, apx_context_sec_level, app_id)
 values ('SETTING', 'SET', null, 1, 0);
 
+commit;
+
+update "APX$CTX" set apx_context_type_id = 0,
+                     apx_context_subtype_id = 9
+where apx_context_is_generic = 1;
 
 commit;
 
-create or replace view "APEX_CONFIG_CONTEXT"
-as
-SELECT
-    apx_ctx_id as config_context_id,
-    apx_context as config_context
-FROM
-    "APX$CTX"
-order by 1;
-/
 -----------------------------------------------------------------------------------------------------
 -- App Status Table (for all sorts of Apex Object Types)
 
@@ -574,7 +759,7 @@ modified date,
 modified_by varchar2(64),
 constraint "APX$STATUS_ID" primary key (apx_status_id),
 constraint "APX$STATUS_PARENT_FK" foreign key (apx_parent_status_id) references "APX$STATUS"(apx_status_id),
-constraint "APX$STATUS_CTX_FK" foreign key (apx_status_ctx_id) references "APX$CTX"(apx_ctx_id)
+constraint "APX$STATUS_CTX_FK" foreign key (apx_status_ctx_id) references "APX$CTX"(apx_context_id)
 );
 
 create unique index "APX$STATUS_UNQ1" on "APX$STATUS"(apx_status_id, apx_id);
@@ -614,38 +799,38 @@ create synonym  "APEX_STATUS"                    for "APX$STATUS";
 
 -- DEFAULT Status first
 insert into "APX$STATUS" (apx_status_id, apx_status, apx_status_code, apx_status_ctx_id, apx_id)
-values ('0', 'DEFAULT', 'DEF', (select apx_ctx_id from "APX$CTX" WHERE apx_context = 'DEFAULT'), V('FB_FLOW_ID'));
+values ('0', 'DEFAULT', 'DEF', (select apx_context_id from "APX$CTX" WHERE apx_context = 'DEFAULT'), V('FB_FLOW_ID'));
 -- Status by Context
 insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
-values ('ON', 'ON', (select apx_ctx_id from "APX$CTX" WHERE apx_context = 'SETTING'), v('FB_FLOW_ID'));
+values ('ON', 'ON', (select apx_context_id from "APX$CTX" WHERE apx_context = 'SETTING'), v('FB_FLOW_ID'));
 insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
-values ('OFF', 'OFF', (select apx_ctx_id from "APX$CTX" WHERE apx_context = 'SETTING'), V('FB_FLOW_ID'));
+values ('OFF', 'OFF', (select apx_context_id from "APX$CTX" WHERE apx_context = 'SETTING'), V('FB_FLOW_ID'));
 insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
-values ('ENABLED', 'ENA', (select apx_ctx_id from "APX$CTX" WHERE apx_context = 'APPLICATION'), v('FB_FLOW_ID'));
+values ('ENABLED', 'ENA', (select apx_context_id from "APX$CTX" WHERE apx_context = 'APPLICATION'), v('FB_FLOW_ID'));
 insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
-values ('DISABLED', 'DIS', (select apx_ctx_id from "APX$CTX" WHERE apx_context = 'APPLICATION'), V('FB_FLOW_ID'));
+values ('DISABLED', 'DIS', (select apx_context_id from "APX$CTX" WHERE apx_context = 'APPLICATION'), V('FB_FLOW_ID'));
 insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
-values ('OPEN', 'OPN', (select apx_ctx_id from "APX$CTX" where apx_context = 'ACCOUNT'), v('FB_FLOW_ID'));
+values ('OPEN', 'OPN', (select apx_context_id from "APX$CTX" where apx_context = 'ACCOUNT'), v('FB_FLOW_ID'));
 insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
-values ('LOCKED', 'LCK', (select apx_ctx_id from "APX$CTX" WHERE apx_context = 'ACCOUNT'), V('FB_FLOW_ID'));
+values ('LOCKED', 'LCK', (select apx_context_id from "APX$CTX" WHERE apx_context = 'ACCOUNT'), V('FB_FLOW_ID'));
 insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
-values ('EXPIRED', 'XPR', (select apx_ctx_id from "APX$CTX" WHERE apx_context = 'ACCOUNT'), v('FB_FLOW_ID'));
+values ('EXPIRED', 'XPR', (select apx_context_id from "APX$CTX" WHERE apx_context = 'ACCOUNT'), v('FB_FLOW_ID'));
 insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
-values ('SUSPENDED', 'SUS', (select apx_ctx_id from "APX$CTX" WHERE apx_context = 'ACCOUNT'), V('FB_FLOW_ID'));
+values ('SUSPENDED', 'SUS', (select apx_context_id from "APX$CTX" WHERE apx_context = 'ACCOUNT'), V('FB_FLOW_ID'));
 insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
-values ('UP', 'UP', (select apx_ctx_id from "APX$CTX" WHERE apx_context = 'APPLICATION'), V('FB_FLOW_ID'));
+values ('UP', 'UP', (select apx_context_id from "APX$CTX" WHERE apx_context = 'APPLICATION'), V('FB_FLOW_ID'));
 insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
-values ('DOWN', 'DWN', (select apx_ctx_id from "APX$CTX" where apx_context = 'APPLICATION'), V('FB_FLOW_ID'));
+values ('DOWN', 'DWN', (select apx_context_id from "APX$CTX" where apx_context = 'APPLICATION'), V('FB_FLOW_ID'));
 insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
-values ('NEW', 'NEW', (select apx_ctx_id from "APX$CTX" WHERE apx_context = 'USER'), v('FB_FLOW_ID'));
+values ('NEW', 'NEW', (select apx_context_id from "APX$CTX" WHERE apx_context = 'USER'), v('FB_FLOW_ID'));
 insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
-values ('REGISTERED', 'REG', (select apx_ctx_id from "APX$CTX" where apx_context = 'USER'), V('FB_FLOW_ID'));
+values ('REGISTERED', 'REG', (select apx_context_id from "APX$CTX" where apx_context = 'USER'), V('FB_FLOW_ID'));
 insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
-values ('VERIFIED', 'VER', (select apx_ctx_id from "APX$CTX" WHERE apx_context = 'USER'), v('FB_FLOW_ID'));
+values ('VERIFIED', 'VER', (select apx_context_id from "APX$CTX" WHERE apx_context = 'USER'), v('FB_FLOW_ID'));
 insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
-values ('VALIDATED', 'VALI', (select apx_ctx_id from "APX$CTX" where apx_context = 'USER'), V('FB_FLOW_ID'));
+values ('VALIDATED', 'VALI', (select apx_context_id from "APX$CTX" where apx_context = 'USER'), V('FB_FLOW_ID'));
 insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
-values ('VALID', 'VAL', (select apx_ctx_id from "APX$CTX" where apx_context = 'USER'), V('FB_FLOW_ID'));
+values ('VALID', 'VAL', (select apx_context_id from "APX$CTX" where apx_context = 'USER'), V('FB_FLOW_ID'));
 
 commit;
 
@@ -704,7 +889,7 @@ constraint "APX$PRC_ID" primary key (apx_process_id),
 constraint "APX$PRC_TYPE_FK" foreign key (apx_process_type_id) references "APX$"(apx_id) on delete set null,
 constraint "APX$PRC_PARENT_FK" foreign key (apx_parent_process_id) references "APX$PRC"(apx_process_id) on delete set null,
 constraint "APX$PRC_STATUS_FK" foreign key (apx_process_status_id) references "APX$STATUS"(apx_status_id) on delete set null,
-constraint "APX$PRC_CTX_FK" foreign key (apx_process_ctx_id) references "APX$CTX"(apx_ctx_id) on delete set null
+constraint "APX$PRC_CTX_FK" foreign key (apx_process_ctx_id) references "APX$CTX"(apx_context_id) on delete set null
 );
 
 create unique index "APX$PRC_UNQ1" on "APX$PRC"(apx_process_id, app_id);
@@ -815,7 +1000,7 @@ modified date,
 modified_by varchar2(64),
 constraint "APX$OPT_ID" primary key (apx_option_id),
 constraint "APX$OPT_PRC_FK" foreign key (apx_process_id) references "APX$PRC"(apx_process_id) on delete cascade,
-constraint "APX$OPT_CTX_FK" foreign key (apx_option_ctx_id) references "APX$CTX"(apx_ctx_id) on delete set null,
+constraint "APX$OPT_CTX_FK" foreign key (apx_option_ctx_id) references "APX$CTX"(apx_context_id) on delete set null,
 constraint "APX$OPT_STATUS_FK" foreign key (apx_option_status_id) references "APX$STATUS"(apx_status_id) on delete set null,
 constraint "APX$OPT_PARENT_FK" foreign key (apx_parent_opt_id) references "APX$OPT"(apx_option_id) on delete set null
 );
@@ -887,8 +1072,8 @@ modified_by varchar2(64),
 constraint "APX$CFG_ID" primary key (apx_config_id),
 constraint "APX$CFG_SUB_FK" foreign key (apx_parent_config_id) references "APX$CFG"(apx_config_id),
 constraint "APX$CFG_STAT_FK" foreign key (apx_config_status_id) references "APX$STATUS"(apx_status_id) on delete set null,
-constraint "APX$CFG_CTX_FK" foreign key (apx_config_ctx_id) references "APX$CTX"(apx_ctx_id) on delete set null,
-constraint "APX$CFG_SUB_CTX_FK" foreign key (apx_config_sub_ctx_id) references "APX$CTX"(apx_ctx_id) on delete set null
+constraint "APX$CFG_CTX_FK" foreign key (apx_config_ctx_id) references "APX$CTX"(apx_context_id) on delete set null,
+constraint "APX$CFG_SUB_CTX_FK" foreign key (apx_config_sub_ctx_id) references "APX$CTX"(apx_context_id) on delete set null
 );
 
 create unique index "APX$CFG_UNQ1" on "APX$CFG"(apx_config_id,  app_id);
@@ -922,6 +1107,38 @@ end;
 
 create synonym  "APEX_CONFIG"           for "APX$CFG";
 create synonym  "APEX_SETTING"         for "APX$CFG";
+
+
+-------------------------------------------------------------------------------
+-- Views on APX$CFG
+create view "APEX_CONFIGURATION"
+as
+select
+    cfg.apx_config_id as apex_config_id,
+    cfg.apx_config_name as apex_config_item,
+    nvl(cfg.apx_config_value, cfg.apx_config_def_value) as apex_config_item_value,
+    cfg.apx_config_value as apex_configured_item_value,
+    cfg.apx_config_def_value as apex_default_item_value,
+    s.apx_status as apex_config_item_status,
+    ctx.apx_context as apex_configuration_context,
+    subctx.apx_context as apex_configuration_subcontext,
+    cfg.apx_config_comment as apex_config_comment,
+    cfg.apx_config_description as apex_config_description,
+    cfg.apx_parent_config_id as apex_parent_config_id,
+    (select b.apx_config_name from "APEX_CONFIG" b
+     where b.apx_config_id = cfg.apx_parent_config_id) as apex_parent_config,
+    cfg.app_id,
+    cfg.created,
+    cfg.created_by,
+    cfg.modified,
+    cfg.modified_by
+FROM "APEX_CONFIG" cfg
+left outer join "APEX_STATUS" s
+on (cfg.apx_config_status_id = s.apx_status_id)
+left outer join "APEX_SYS_CONTEXT" ctx
+on (cfg.apx_config_ctx_id = ctx.apx_context_id)
+left outer join "APEX_SYS_CONTEXT" subctx
+on (cfg.apx_config_sub_ctx_id = subctx.apx_context_id);
 
 
 -------------------------------------------------------------------------------
@@ -1054,6 +1271,19 @@ end;
 /
 
 create synonym  "APEX_MIME_TYPES" for "APX$MIME";
+
+
+-----------------------------------------------------------------------------------------------------
+-- View MIME Type Icons
+create or replace view "APEX_MIME_ICON_CLASSES"
+as
+select m.mime_type_id, m.mime_type, m.mime_icon_class
+, m.mime_icon_color, m.mime_icon_color_active, m.mime_icon_color_hover
+, m.mime_type_class_id as mime_type_media_class_id
+, a.apx_object as mime_type_media_class
+from "APEX_MIME_TYPES" m left outer join "APEX_APX" a
+on (m.mime_type_class_id = a.apx_id);
+
 
 -----------------------------------------------------------------------------------------------------
 --- APX$MIME
@@ -2381,18 +2611,6 @@ where lower(b.apx_object) = substr(m.mime_type, 1, instr(m.mime_type, '/') -1)
 commit;
 
 
-
--- MIME Type Icons
-create or replace view "APEX_MIME_ICON_CLASSES"
-as
-select m.mime_type_id, m.mime_type, m.mime_icon_class
-, m.mime_icon_color, m.mime_icon_color_active, m.mime_icon_color_hover
-, m.mime_type_class_id as mime_type_media_class_id
-, a.apx_object as mime_type_media_class
-from "APX$MIME" m left outer join "APX$" a
-on (m.mime_type_class_id = a.apx_id);
-
-
 -- Updated File Type Icons
 update "APX$MIME" set mime_icon_class = 'fa-file-archive-o'
 where mime_type_id in (
@@ -2530,6 +2748,77 @@ where mime_icon_class is null;
 
 commit;
 
+-----------------------------------------------------------------------------------------------------
+-- App Processes Table (Procedures,  Functions,  Authorization Items, ...)
+
+---- drop first
+-- drop synonym  "APEX_APP";
+
+-- drop sequence "APX$APP_ID_SEQ";
+-- drop trigger "APX$APP_BIU_TRG";
+
+-- drop table "APX$APP" purge;
+
+-----------------------------------------------------------------------------------------------------
+-- App Processes Table (Procedures,  Functions,  Authorization Items, ...)
+create table "APX$APP"(
+apx_app_id number not null,
+apx_app_name varchar2(64) not null,
+apx_app_code varchar2(12),
+apx_app_parent_app_id number,
+apx_app_sec_level number default 0,
+app_id number,
+ws_id number,
+ws_name varchar2(128),
+app_status_id number,
+created date,
+created_by varchar2(64),
+modified date,
+modified_by varchar2(64),
+constraint "APX$APP_ID" primary key (apx_app_id),
+constraint "APX$APP_PARENT_FK" foreign key (apx_app_parent_app_id) references "APX$APP"(apx_app_id),
+constraint "APX$APP_STATUS_FK" foreign key (app_status_id) references "APX$STATUS"(apx_status_id)
+);
+
+create unique index "APX$APP_UNQ1" on "APX$APP"(apx_app_id,  app_id);
+create unique index "APX$APP_UNQ2" on "APX$APP"(upper(apx_app_name),  upper(apx_app_code),  app_id);
+create index "APX$APP_STATUS_FK" on "APX$APP" (app_status_id);
+
+create sequence "APX$APP_ID_SEQ" start with 1 increment by 1 nocache;
+
+create or replace trigger "APX$APP_BIU_TRG"
+before insert or update on "APX$APP"
+referencing old as old new as new
+for each row
+begin
+  if inserting then
+    if (:new.apx_app_id is null) then
+        select "APX$APP_ID_SEQ".NEXTVAL
+        into :new.apx_app_id
+        from dual;
+    end if;
+    select sysdate,  nvl(v('APP_USER'),  user)
+    into :new.created, :new.created_by
+    from dual;
+  elsif updating then
+    select sysdate,  nvl(v('APP_USER'),  user)
+    into :new.modified, :new.modified_by
+    from dual;
+  end if;
+end;
+/
+
+create synonym  "APEX_APP"               for "APX$APP";
+
+-------------------------------------------------------------------------------------------------
+-- INSERTING into APX$APP
+
+insert into "APX$APP" (apx_app_id, apx_app_name, apx_app_code, apx_app_sec_level, app_id, ws_id, ws_name, app_status_id)
+(select 0,  application_name, alias, 2, application_id, workspace_id, workspace, 3
+ from "APEX_APPLICATIONS"
+ where ALIAS = 'BUILDER');
+
+commit;
 --------------------------------------------------------------------------------
 -- APEX User Session
 
@@ -2612,6 +2901,85 @@ select app_user_session_id,
   ((cast(app_user_last_login as date) - date '1970-01-01')*24*60*60) as app_session_duration
 from  "APX$USR_SESSION"
 );
+
+
+-----------------------------------------------------------------------------------------------------
+-- App Processes Table (Procedures, Functions, Authorization Items,...)
+
+-- requires APX$ APX$CTX APX$STATUS APX$PRC
+
+-- -- drop first
+-- drop synonym  "APEX_SOURCE";
+
+-- drop sequence "APX$SOURCE_ID_SEQ";
+-- drop trigger "APX$SOURCE_BIU_TRG";
+
+-- drop table "APX$SOURCE" purge;
+
+
+-----------------------------------------------------------------------------------------------------
+-- Scope Table (Application, Users, Roles,...)
+create table "APX$SOURCE" (
+apx_source_id number not null, -- PK
+apx_source_name varchar2(64) not null,
+apx_source_value varchar2(2000),
+apx_default_value varchar2(2000),
+apx_source_code varchar2(4000),
+apx_sourcecode clob,
+apx_parent_source_id number,
+apx_source_ctx_id number,
+apx_source_type_id number,
+apx_source_subtype_id number,
+apx_source_status_id number,
+apx_source_sec_level number default 0,
+apx_process_id number,
+apx_id number,
+created date,
+created_by varchar2(64),
+modified date,
+modified_by varchar2(64),
+constraint "APX$SOURCE_ID" primary key (apx_source_id),
+constraint "APX$SOURCE_PRC_FK" foreign key (apx_process_id) references "APX$PRC"(apx_process_id) on delete cascade,
+constraint "APX$SOURCE_CTX_FK" foreign key (apx_source_ctx_id) references "APX$CTX"(apx_context_id) on delete set null,
+constraint "APX$SOURCE_TYPE_FK" foreign key (apx_source_type_id) references "APX$"(apx_id) on delete set null,
+constraint "APX$SOURCE_SUBTYPE_FK" foreign key (apx_source_subtype_id) references "APX$"(apx_id) on delete set null,
+constraint "APX$SOURCE_STATUS_FK" foreign key (apx_source_status_id) references "APX$STATUS"(apx_status_id) on delete set null,
+constraint "APX$SOURCE_PARENT_FK" foreign key (apx_parent_source_id) references "APX$SOURCE"(apx_source_id) on delete set null
+);
+
+create unique index "APX$SOURCE_UNQ1" on "APX$SOURCE"(apx_source_id, apx_id);
+create unique index "APX$SOURCE_UNQ2" on "APX$SOURCE"(upper(trim(apx_source_name)), apx_source_ctx_id, apx_id);
+create unique index "APX$SOURCE_UNQ3" on "APX$SOURCE"(upper(trim(apx_source_name)), apx_source_type_id, apx_source_subtype_id, apx_id);
+create index "APX$SOURCE_CONTEXT_FK" on "APX$SOURCE" (apx_source_ctx_id);
+create index "APX$SOURCE_TYPE_FK" on "APX$SOURCE" (apx_source_type_id);
+create index "APX$SOURCE_SUBTYPE_FK" on "APX$SOURCE" (apx_source_subtype_id);
+create index "APX$SOURCE_STATUS_FK" on "APX$SOURCE" (apx_source_status_id);
+
+create sequence "APX$SOURCE_ID_SEQ" start with 1 increment by 1 nocache;
+
+create or replace trigger "APX$SOURCE_BIU_TRG"
+before insert or update on "APX$SOURCE"
+referencing old as old new as new
+for each row
+begin
+  if inserting then
+    if (:new.apx_source_id is null) then
+        select "APX$SOURCE_ID_SEQ".NEXTVAL
+        into :new.apx_source_id
+        from dual;
+    end if;
+    select sysdate, nvl(v('APP_USER'), user)
+    into :new.created, :new.created_by
+    from dual;
+  elsif updating then
+    select sysdate, nvl(v('APP_USER'), user)
+    into :new.modified, :new.modified_by
+    from dual;
+  end if;
+end;
+/
+
+create synonym  "APEX_SOURCE"        for "APX$SOURCE";
 
 
 ------------------------------------------------------------------
@@ -3917,6 +4285,6 @@ end;
 set pages 0 line 120 define off verify off set feed off timing off
 
 EXIT SQL.SQLCODE;
-       ---- 17.12.11 23:23  End of SQL Build APX  ----
+       ---- 17.12.13 23:17  End of SQL Build APX  ----
 ---------------------------------------------------------------
 
