@@ -1,6 +1,6 @@
 
 ---------------------------------------------------------------
-       ---- 17.12.13 23:17 Begin of SQL Build APX ----
+       ---- 17.12.13 23:46 Begin of SQL Build APX ----
 
 
 -- SQL Drop File
@@ -81,7 +81,7 @@ drop table "APX$PRC" purge;
 
 
 prompt APX$STATUS
-drop synonym     "APEX_STATUS";
+drop synonym  "APEX_SYS_STATUS";
 
 drop sequence    "APX$STATUS_ID_SEQ";
 drop trigger     "APX$STATUS_BIU_TRG";
@@ -137,13 +137,19 @@ drop view "APEX_SEC_CODE_PICKER";
 prompt "APEX_OBJECTS"
 drop view "APEX_OBJECTS";
 
-
 prompt  "APEX_CONTEXT"
 drop view  "APEX_CONTEXT";
 
 prompt APEX_CONFIG
 drop view "APEX_CONFIG_CONTEXT";
 drop view "APEX_CONFIGURATION";
+
+prompt APEX_STATUS
+drop view "APEX_STATUS";
+
+
+---------------------------------------------
+-- Procedures and Functions
 
 prompt "APX_GET_TOKEN"
 drop function "APX_GET_TOKEN";
@@ -736,7 +742,7 @@ commit;
 -----------------------------------------------------------------------------------------------------
 
 -- drop first
--- drop synonym     "APEX_STATUS";
+-- drop synonym     "APEX_SYS_STATUS";
 
 -- drop sequence    "APX$STATUS_ID_SEQ";
 -- drop trigger     "APX$STATUS_BIU_TRG";
@@ -791,7 +797,27 @@ begin
 end;
 /
 
-create synonym  "APEX_STATUS"                    for "APX$STATUS";
+create synonym  "APEX_SYS_STATUS"                    for "APX$STATUS";
+
+-----------------------------------------------------------------------------------------------------
+-- Views on APX$STATUS
+
+create view "APEX_STATUS"
+as
+ select s.apx_status_id as apex_status_id,
+           s.apx_status as apex_status,
+           s.apx_status_code as apex_status_code,
+           s.apx_status_ctx_id as apex_status_context_id,
+           ctx.apex_context as apex_status_context,
+           s.apx_parent_status_id as apex_parent_status_id,
+          (select b.apx_status from "APEX_SYS_STATUS" b
+           where b.apx_status_id = s.apx_parent_status_id) as apex_parent_status,
+           s.apx_status_sec_level as apex_status_security_level,
+           s.apx_id as app_id
+from  "APEX_SYS_STATUS" s
+left outer join "APEX_CONTEXT" ctx
+on (s.apx_status_ctx_id = ctx.apex_context_id)
+order by 1;
 
 
 -----------------------------------------------------------------------------------------------------
@@ -1119,7 +1145,7 @@ select
     nvl(cfg.apx_config_value, cfg.apx_config_def_value) as apex_config_item_value,
     cfg.apx_config_value as apex_configured_item_value,
     cfg.apx_config_def_value as apex_default_item_value,
-    s.apx_status as apex_config_item_status,
+    s.apex_status as apex_config_item_status,
     ctx.apx_context as apex_configuration_context,
     subctx.apx_context as apex_configuration_subcontext,
     cfg.apx_config_comment as apex_config_comment,
@@ -1134,7 +1160,7 @@ select
     cfg.modified_by
 FROM "APEX_CONFIG" cfg
 left outer join "APEX_STATUS" s
-on (cfg.apx_config_status_id = s.apx_status_id)
+on (cfg.apx_config_status_id = s.apex_status_id)
 left outer join "APEX_SYS_CONTEXT" ctx
 on (cfg.apx_config_ctx_id = ctx.apx_context_id)
 left outer join "APEX_SYS_CONTEXT" subctx
@@ -4282,9 +4308,9 @@ begin
 end;
 /
 
-set pages 0 line 120 define off verify off set feed off timing off
+set pages 0 line 120 define off verify off feed off echo off timing off
 
 EXIT SQL.SQLCODE;
-       ---- 17.12.13 23:17  End of SQL Build APX  ----
+       ---- 17.12.13 23:46  End of SQL Build APX  ----
 ---------------------------------------------------------------
 
