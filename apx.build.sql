@@ -1,6 +1,6 @@
 
 ---------------------------------------------------------------
-       ---- 17/12/17 20:56 Begin of SQL Build APX ----
+       ---- 17/12/17 21:09 Begin of SQL Build APX ----
 
 
 -- SQL Drop File
@@ -3639,7 +3639,7 @@ apx_username varchar2(64) not null,
 apx_user_email varchar2(64),
 apx_user_session_status_id number,
 app_id number,
-apx_ws_id number,
+app_ws_id number,
 apx_user_cookie_name varchar2(64),
 apx_user_last_page number,
 apx_user_last_login timestamp default current_timestamp,
@@ -3681,7 +3681,7 @@ select apx_user_session_id,
   apx_username,
   apx_user_email,
   app_id,
-  apx_ws_id,
+  app_ws_id,
   apx_user_session_status_id,
   apx_user_last_login,
   apx_user_last_logout,
@@ -3697,7 +3697,7 @@ select apx_user_session_id,
   apx_username,
   apx_user_email,
   app_id,
-  apx_ws_id,
+  app_ws_id,
   apx_user_last_login,
   apx_user_last_logout,
   apx_user_session_seconds,
@@ -5407,7 +5407,7 @@ prompt "REGISTER_LOGIN"
 create or replace procedure "REGISTER_LOGIN"
 is
 begin
-  insert into "APX$USR_SESSION" (app_user_session_id, app_username, app_id, app_ws_id)
+  insert into "APX$USR_SESSION" (apx_user_session_id, apx_username, app_id, app_ws_id)
   values(v('SESSION'), v('APP_USER'), v('APP_ID'), apx.getwsid(p_app_id=>v('APP_ID')));
 end;
 /
@@ -5416,6 +5416,6 @@ set pages 0 line 120 define off verify off feed off echo off timing off
 
 EXIT SQL.SQLCODE;
 
-       ---- 17/12/17 20:56  End of SQL Build APX  ----
+       ---- 17/12/17 21:09  End of SQL Build APX  ----
 ---------------------------------------------------------------
 

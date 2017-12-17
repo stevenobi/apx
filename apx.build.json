@@ -1,8 +1,8 @@
 { "application": "APX Application Modules",
   "version": "1.0.0",
   "release": 
-    { "build": "0066",
+    { "build": "0067",
       "comment": "APX",
-      "checksum": "8d54f55bd0c02ecef7f384f9486fb21a" 
+      "checksum": "ddd6610e0d5a6d848de53780b8c0b984" 
     }
 }
