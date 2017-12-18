@@ -3519,6 +3519,7 @@ begin
 end;
 /
 
+exit;
 --------------------------------------------------------------------------------------
 -- Synonyms on APX$USER_REG
 create synonym  "APEX_USER_REGISTRATION"        for "APX$USER_REG";
@@ -6414,6 +6415,8 @@ begin
   values(v('SESSION'), v('APP_USER'), v('APP_ID'), apx.getwsid(p_app_id=>v('APP_ID')));
 end;
 /
+
+alter trigger "APX$USRREG_BIU_TRG" compile; -- using APX_GET_TOKEN before declared
 
 set pages 0 line 120 define off verify off feed off echo off timing off
 
