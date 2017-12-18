@@ -1,6 +1,6 @@
 
 ---------------------------------------------------------------
-       ---- 17/12/13 23:49 Begin of SQL Build APX ----
+       ---- 17/12/17 21:09 Begin of SQL Build APX ----
 
 
 -- SQL Drop File
@@ -16,6 +16,35 @@ prompt
 prompt Dropping DB Model (Tables)
 prompt
 
+
+-------------------------------------------------------------------------------
+-- Apex User Content and Attachements
+prompt APX$ATTACHEMENT
+drop view        "APEX_ATTACHEMENTS";
+drop synonym     "APEX_ATTACHEMENT";
+drop sequence    "APX$ATTACHEMENT_ID_SEQ";
+drop trigger     "APX$ATTACHEMENT_BIU_TRG";
+drop table       "APX$ATTACHEMENT" purge;
+
+
+prompt APX$CONTENT
+drop view        "APEX_WEB_CONTENT";
+drop synonym     "APEX_CONTENT";
+drop sequence    "APX$CONTENT_ID_SEQ";
+drop trigger     "APX$CONTENT_BIU_TRG";
+drop table       "APX$CONTENT" purge;
+
+
+prompt APX$AUTHOR
+drop view        "APEX_AUTHORS";
+drop synonym     "APEX_AUTHOR";
+drop sequence    "APX$AUTHOR_ID_SEQ";
+drop trigger     "APX$AUTHOR_BIU_TRG";
+drop table       "APX$AUTHOR" purge;
+
+
+-------------------------------------------------------------------------------
+-- Apex Application Sources
 prompt APX$SOURCE
 drop synonym  "APEX_SOURCE";
 
@@ -25,14 +54,73 @@ drop trigger "APX$SOURCE_BIU_TRG";
 drop table "APX$SOURCE" purge;
 
 
+-------------------------------------------------------------------------------
+-- Apex User Session Tables and Views
 prompt APX$USR_SESSION
-drop view "APEX_USER_SESSION";
+drop synonym     "APEX_USER_SESSION";
+drop view        "APEX_USER_SESSIONS";
+drop sequence    "APX$USERSESS_SEQ";
+drop trigger     "APX$USERSESS_BI_TRG";
+drop table       "APX$USR_SESSION"  purge;
 
-drop sequence "APX$APP_USERSESS_SEQ";
-drop trigger "APX$APP_USERSESS_BI_TRG";
 
-drop table "APX$USR_SESSION" purge;
+prompt APX$BUILTIN
+drop synonym     "APEX_BUILTIN";
+drop table       "APX$BUILTIN"       purge;
 
+
+prompt APX$USER_ROLE_MAP
+drop synonym     "APEX_USER_ROLE_MAP";
+drop trigger     "APX$USRDEFROL_TRG";
+drop sequence    "APX$USERROLE_SEQ";
+drop trigger     "APX$USRROL_BIU_TRG";
+drop table       "APX$USER_ROLE_MAP" purge;
+
+
+prompt APX$USER_REGISTRATION
+drop synonym     "APEX_USER_REGISTRATION";
+drop synonym     "APEX_USREG";
+drop sequence    "APX$USREG_ID_SEQ";
+drop trigger     "APX$USRREG_BIU_TRG";
+drop table       "APX$USER_REG"      purge;
+
+prompt APX$USER
+drop synonym     "APEX_USER";
+drop sequence    "APX$USER_ID_SEQ";
+drop trigger     "APX$USER_BIU_TRG" ;
+drop table       "APX$USER"          purge;
+
+
+prompt APX$ROLE
+drop synonym     "APEX_ROLE";
+drop sequence    "APX$ROLE_ID_SEQ";
+drop trigger     "APX$ROLE_BIU_TRG" ;
+drop table       "APX$ROLE"          purge;
+
+
+prompt APX$PRIVILEGE
+drop synonym     "APEX_PRIVILEGE";
+drop sequence    "APX$PRIV_ID_SEQ";
+drop trigger     "APX$PRIV_BIU_TRG";
+drop table       "APX$PRIVILEGE"     purge;
+
+
+prompt APX$DOMAIN
+drop synonym     "APEX_DOMAIN";
+drop sequence    "APX$DOMAIN_ID_SEQ";
+drop trigger     "APX$DOMAIN_BIU_TRG";
+drop table       "APX$DOMAIN"        purge;
+
+
+prompt APX$GROUP
+drop synonym     "APEX_GROUP";
+drop sequence    "APX$GROUP_ID_SEQ";
+drop trigger     "APX$GROUP_BIU_TRG";
+drop table       "APX$GROUP"         purge;
+
+
+-------------------------------------------------------------------------------
+-- Core Tables and Objects
 
 prompt APX$APP
 drop synonym  "APEX_APP";
@@ -2845,88 +2933,791 @@ insert into "APX$APP" (apx_app_id, apx_app_name, apx_app_code, apx_app_sec_level
  where ALIAS = 'BUILDER');
 
 commit;
+--- APEX User Management ---
+
+
+
+-----------------------------------------------------------------------------------------------------
+--
+-- Stefan Obermeyer 12.2016
+--
+-- 12.12.2016 SOB created
+-- 19.12.2016 SOB modified INSERT/UPDATE Trigger to get UserID for DB and APEX Users
+-- 08.01.2017 SOB added Trigger for User INSERTs and Default Role changes.
+-- 02.06.2017 SOB added BUILTINs
+-- 06.11.2017 SOB added Scopes, Domains, Groups and Privileges
+-- 17.12.2017 SOB renamed to apx_ and switched Domain Group paradigm
+--
+-----------------------------------------------------------------------------------------------------
+
+-- @requires APX$ model (Status, Context, ...)
+
+
 --------------------------------------------------------------------------------
--- APEX User Session
-
--- @provides register_login
+-- APEX User's, Groups, Domains,...
 --------------------------------------------------------------------------------
 
--- Apex User Session Tables and Views
+-- -- Apex User Session Tables and Views
 
--- -- drop first
--- drop view "APEX_USER_SESSION";
+-- -- -- drop first
 
--- drop sequence "APX$APP_USERSESS_SEQ";
--- drop trigger "APX$APP_USERSESS_BI_TRG";
+-- drop synonym     "APEX_USER_SESSION";
+-- drop view        "APEX_USER_SESSIONS";
+-- drop sequence    "APX$USERSESS_SEQ";
+-- drop trigger     "APX$USERSESS_BI_TRG";
+-- drop table       "APX$USR_SESSION"  purge;
 
--- drop table "APX$USR_SESSION" purge;
+
+-- drop synonym     "APEX_BUILTIN";
+-- drop table       "APX$BUILTIN"       purge;
 
 
--- Apex App User Session
-create table "APX$USR_SESSION" (
-app_user_session_id number not null primary key,
-app_username varchar2(64) not null,
-app_user_email varchar2(64),
+-- drop synonym     "APEX_USER_ROLE_MAP";
+-- drop trigger     "APX$USRDEFROL_TRG";
+-- drop sequence    "APX$USERROLE_SEQ";
+-- drop trigger     "APX$USRROL_BIU_TRG";
+-- drop table       "APX$USER_ROLE_MAP" purge;
+
+
+-- drop synonym     "APEX_USER_REGISTRATION";
+-- drop synonym     "APEX_USREG";
+-- drop sequence    "APX$USREG_ID_SEQ";
+-- drop trigger     "APX$USRREG_BIU_TRG";
+-- drop table       "APX$USER_REG"      purge;
+
+
+-- drop synonym     "APEX_USER";
+-- drop sequence    "APX$USER_ID_SEQ";
+-- drop trigger     "APX$USER_BIU_TRG" ;
+-- drop table       "APX$USER"          purge;
+
+
+-- drop synonym     "APEX_ROLE";
+-- drop sequence    "APX$ROLE_ID_SEQ";
+-- drop trigger     "APX$ROLE_BIU_TRG" ;
+-- drop table       "APX$ROLE"          purge;
+
+
+-- drop synonym     "APEX_PRIVILEGE";
+-- drop sequence    "APX$PRIV_ID_SEQ";
+-- drop trigger     "APX$PRIV_BIU_TRG";
+-- drop table       "APX$PRIVILEGE"     purge;
+
+
+-- drop synonym     "APEX_DOMAIN";
+-- drop sequence    "APX$DOMAIN_ID_SEQ";
+-- drop trigger     "APX$DOMAIN_BIU_TRG";
+-- drop table       "APX$DOMAIN"        purge;
+
+
+-- drop synonym     "APEX_GROUP";
+-- drop sequence    "APX$GROUP_ID_SEQ";
+-- drop trigger     "APX$GROUP_BIU_TRG";
+-- drop table       "APX$GROUP"         purge;
+
+
+--------------------------------------------------------------------------------------
+-- Application Groups
+create table "APX$GROUP" (
+apx_group_id number not null,
+apx_group_name varchar2(64) not null,
+apx_group_code varchar2(8) null,
+apx_group_description varchar2(128),
+apx_group_status_id number,
+apx_group_context_id number,
+apx_parent_group_id number,
+apx_group_sec_level number default 0,
 app_id number,
-app_ws_id number,
-app_user_cookie_name varchar2(64),
-app_user_last_page number,
-app_user_last_login timestamp default current_timestamp,
-app_user_last_logout timestamp default null,
-app_user_session_seconds number default 28800, -- 8 hrs.
-app_user_session_idle_sec number default 900 -- 15 min.
+created date,
+created_by varchar2(64),
+modified date,
+modified_by varchar2(64),
+constraint "APX$GROUP_GROUP_ID" primary key (apx_group_id),
+constraint "APX$GROUP_CTX_FK" foreign key (apx_group_context_id) references "APX$CTX"(apx_context_id) on delete set null,
+constraint "APX$GROUP_STATUS_FK" foreign key (apx_group_status_id) references "APX$STATUS"(apx_status_id) on delete set null,
+constraint "APX$GROUP_PARENT_FK" foreign key (apx_parent_group_id) references "APX$GROUP"(apx_group_id) on delete set null
 );
 
-create sequence "APX$APP_USERSESS_SEQ" start with 1 increment by 1 nocache;
+create unique index "APX$GROUP_UNQ1"   on "APX$GROUP"(upper(trim(apx_group_name)), apx_group_context_id, app_id);
+create unique index "APX$GROUP_UNQ2"   on "APX$GROUP"(upper(trim(apx_group_code)), apx_group_context_id, app_id);
+create unique index "APX$GROUP_UNQ3"   on "APX$GROUP"(upper(trim(apx_group_name)), upper(trim(apx_group_code)), apx_group_context_id, app_id);
+create index "APX$GROUP_STATUS_FK_IDX" on "APX$GROUP"(apx_group_status_id);
+create index "APX$GROUP_PARENT_FK_IDX" on "APX$GROUP"(apx_parent_group_id);
+create index "APX$GROUP_SECLEV"        on "APX$GROUP"(apx_group_sec_level);
+create index "APX$GROUP_APX_ID"        on "APX$GROUP"(app_id);
 
-create or replace trigger "APX$APP_USERSESS_BI_TRG"
+
+create sequence "APX$GROUP_ID_SEQ" start with 10 increment by 1 nocache;
+
+create or replace trigger "APX$GROUP_BIU_TRG"
+before insert or update on "APX$GROUP"
+referencing old as old new as new
+for each row
+begin
+  if inserting then
+    if (:new.apx_group_id is null) then
+        select "APX$GROUP_ID_SEQ".NEXTVAL
+        into :new.apx_group_id
+        from dual;
+    end if;
+    if (:new.app_id is null) then
+        select nvl2(v('FB_FLOW_ID'), v('FB_FLOW_ID'), v('APP_ID'))
+        into :new.app_id
+        from dual;
+    end if;
+    select sysdate, nvl(v('APX_USER'), user)
+    into :new.created, :new.created_by
+    from dual;
+  elsif updating then
+    select sysdate, nvl(v('APX_USER'), user)
+    into :new.modified, :new.modified_by
+    from dual;
+  end if;
+end;
+/
+
+
+--------------------------------------------------------------------------------------
+-- Synonyms on APX$GROUP
+create synonym  "APEX_GROUP"           for "APX$GROUP";
+
+
+--------------------------------------------------------------------------------------
+-- Application Domains
+create table "APX$DOMAIN" (
+apx_domain_id number not null,
+apx_domain varchar2(64) not null, -- fully qualified domain name (f.e.: mydomain.net)
+apx_domain_name varchar2(64) not null, -- conceptual name like MyDomain
+apx_domain_code varchar2(8) null,
+apx_domain_description varchar2(128),
+apx_parent_domain_id number,
+apx_domain_status_id number,
+apx_domain_group_id number default 1,
+apx_domain_sec_level number default 0,
+apx_domain_context_id number default 0,
+apx_domain_homepage varchar2(1000),
+app_id number default 0,
+created date,
+created_by varchar2(64),
+modified date,
+modified_by varchar2(64),
+constraint "APX$DOMAIN_DOMAIN_ID" primary key (apx_domain_id),
+constraint "APX$DOMAIN_CTX_ID_FK" foreign key (apx_domain_context_id) references "APX$CTX"(apx_context_id) on delete set null,
+constraint "APX$DOMAIN_STATUS_FK" foreign key (apx_domain_status_id) references "APX$STATUS"(apx_status_id) on delete set null,
+constraint "APX$DOMAIN_GROUP_ID_FK" foreign key (apx_domain_group_id) references "APX$GROUP"(apx_group_id) on delete set null,
+constraint "APX$DOMAIN_PARENT_FK" foreign key (apx_parent_domain_id) references "APX$DOMAIN"(apx_domain_id) on delete set null
+);
+
+create unique index "APX$DOMAIN_UNQ1"   on "APX$DOMAIN"(upper(trim(apx_domain_name)), app_id);
+create unique index "APX$DOMAIN_UNQ2"   on "APX$DOMAIN"(upper(trim(apx_domain)), app_id);
+create unique index "APX$DOMAIN_UNQ3"   on "APX$DOMAIN"(upper(trim(apx_domain_name)), upper(trim(apx_domain)), app_id);
+create index "APX$DOMAIN_GROUP_FK_IDX"  on "APX$DOMAIN"(apx_domain_group_id);
+create index "APX$DOMAIN_STATUS_FK_IDX" on "APX$DOMAIN"(apx_domain_status_id);
+create index "APX$DOMAIN_PARENT_FK_IDX" on "APX$DOMAIN"(apx_parent_domain_id);
+create index "APX$DOMAIN_SECLEV"        on "APX$DOMAIN"(apx_domain_sec_level);
+create index "APX$DOMAIN_APX_ID"        on "APX$DOMAIN"(app_id);
+
+
+create sequence "APX$DOMAIN_ID_SEQ" start with 10 increment by 1 nocache;
+
+create or replace trigger "APX$DOMAIN_BIU_TRG"
+before insert or update on "APX$DOMAIN"
+referencing old as old new as new
+for each row
+begin
+  if inserting then
+    if (:new.apx_domain_id is null) then
+        select "APX$DOMAIN_ID_SEQ".NEXTVAL
+        into :new.apx_domain_id
+        from dual;
+    end if;
+    if (:new.app_id is null) then
+        select nvl2(v('FB_FLOW_ID'), v('FB_FLOW_ID'), v('APP_ID'))
+        into :new.app_id
+        from dual;
+    end if;
+    select sysdate, nvl(v('APX_USER'), user)
+    into :new.created, :new.created_by
+    from dual;
+  elsif updating then
+    select sysdate, nvl(v('APX_USER'), user)
+    into :new.modified, :new.modified_by
+    from dual;
+  end if;
+end;
+/
+
+--------------------------------------------------------------------------------------
+-- Synonyms on APX$DOMAIN
+create synonym  "APEX_DOMAIN"           for "APX$DOMAIN";
+
+
+--------------------------------------------------------------------------------------
+-- Application Privileges
+create table "APX$PRIVILEGE" (
+apx_priv_id number not null,
+apx_privilege varchar2(64) not null,
+apx_priv_code varchar2(12) null,
+apx_priv_description varchar2(128),
+apx_priv_status_id number,
+apx_priv_context_id number,
+app_id number,
+apx_parent_priv_id number,
+apx_priv_sec_level number default 0,
+apx_priv_domain_id number default 0,
+created date,
+created_by varchar2(64),
+modified date,
+modified_by varchar2(64),
+constraint "APX$PRIV_PRIV_ID" primary key (apx_priv_id),
+constraint "APX$PRIV_CTX_FK" foreign key (apx_priv_context_id) references "APX$CTX"(apx_context_id) on delete set null,
+constraint "APX$PRIV_STATUS_FK" foreign key (apx_priv_status_id) references "APX$STATUS"(apx_status_id) on delete set null,
+constraint "APX$PRIV_PARENT_FK" foreign key (apx_parent_priv_id) references "APX$PRIVILEGE"(apx_priv_id) on delete set null
+);
+
+create unique index "APX$PRIV_UNQ1"   on "APX$PRIVILEGE"(upper(trim(apx_privilege)), apx_priv_context_id, app_id);
+create unique index "APX$PRIV_UNQ2"   on "APX$PRIVILEGE"(upper(trim(apx_priv_code)), apx_priv_context_id, app_id);
+create index "APX$PRIV_STATUS_FK_IDX" on "APX$PRIVILEGE"(apx_priv_status_id);
+create index "APX$PRIV_PARENT_FK_IDX" on "APX$PRIVILEGE"(apx_parent_priv_id);
+create index "APX$PRIV_SECLEV"        on "APX$PRIVILEGE"(apx_priv_sec_level);
+create index "APX$PRIV_APP_ID"        on "APX$PRIVILEGE"(app_id);
+
+create sequence "APX$PRIV_ID_SEQ" start with 10 increment by 1 nocache;
+
+create or replace trigger "APX$PRIV_BIU_TRG"
+before insert or update on "APX$PRIVILEGE"
+referencing old as old new as new
+for each row
+begin
+  if inserting then
+    if (:new.apx_priv_id is null) then
+        select "APX$PRIV_ID_SEQ".NEXTVAL
+        into :new.apx_priv_id
+        from dual;
+    end if;
+    if (:new.app_id is null) then
+        select nvl2(v('FB_FLOW_ID'), v('FB_FLOW_ID'), v('APP_ID'))
+        into :new.app_id
+        from dual;
+    end if;
+    select sysdate, nvl(v('APX_USER'), user)
+    into :new.created, :new.created_by
+    from dual;
+  elsif updating then
+    select sysdate, nvl(v('APX_USER'), user)
+    into :new.modified, :new.modified_by
+    from dual;
+  end if;
+end;
+/
+
+--------------------------------------------------------------------------------------
+-- Synonyms on APX$PRIVILEGE
+create synonym  "APEX_PRIVILEGE"        for "APX$PRIVILEGE";
+
+
+--------------------------------------------------------------------------------------
+-- Application Roles
+create table "APX$ROLE" (
+APX_ROLE_ID number not null,
+apx_role_name varchar2(64) not null,
+apx_role_code varchar2(8) null,
+apx_role_description varchar2(128),
+apx_role_sec_level number default 0,
+apx_role_domain_id number default 0,
+apx_role_status_id number,
+apx_role_context_id number,
+app_id number,
+apx_parent_role_id number,
+created date,
+created_by varchar2(64),
+modified date,
+modified_by varchar2(64),
+constraint "APX$ROLE_ROLE_ID" primary key (apx_role_id),
+constraint "APX$ROLE_CTX_FK" foreign key (apx_role_context_id) references "APX$CTX"(apx_context_id) on delete set null,
+constraint "APX$ROLE_STATUS_FK" foreign key (apx_role_status_id) references "APX$STATUS"(apx_status_id) on delete set null,
+constraint "APX$ROLE_DOMAIN_FK" foreign key (apx_role_domain_id) references "APX$DOMAIN"(apx_domain_id) on delete set null,
+constraint "APX$ROLE_PARENT_FK" foreign key (apx_parent_role_id) references "APX$ROLE"(apx_role_id) on delete set null
+);
+
+create unique index "APX$ROLE_UNQ1" on "APX$ROLE"(apx_role_id, app_id);
+create unique index "APX$ROLE_UNQ2" on "APX$ROLE"(upper(apx_role_name), apx_role_context_id, app_id);
+
+create index "APX$ROLE_DOMAIN_FK_IDX" on "APX$ROLE"(apx_role_domain_id);
+create index "APX$ROLE_CTX_FK_IDX"    on "APX$ROLE"(apx_role_context_id);
+create index "APX$ROLE_STATUS_FK_IDX" on "APX$ROLE"(apx_role_status_id);
+create index "APX$ROLE_PARENT_FK_IDX" on "APX$ROLE"(apx_parent_role_id);
+create index "APX$ROLE_SECLEV"        on "APX$ROLE"(apx_role_sec_level);
+create index "APX$ROLE_APX_ID"        on "APX$ROLE"(app_id);
+
+create sequence "APX$ROLE_ID_SEQ" start with 10 increment by 1 nocache;
+
+create or replace trigger "APX$ROLE_BIU_TRG"
+before insert or update on "APX$ROLE"
+referencing old as old new as new
+for each row
+begin
+  if inserting then
+    if (:new.apx_role_id is null) then
+        select "APX$ROLE_ID_SEQ".NEXTVAL
+        into :new.apx_role_id
+        from dual;
+    end if;
+    if (:new.app_id is null) then
+        select nvl2(v('FB_FLOW_ID'), v('FB_FLOW_ID'), v('APP_ID'))
+        into :new.app_id
+        from dual;
+    end if;
+    select sysdate, nvl(v('APX_USER'), user)
+    into :new.created, :new.created_by
+    from dual;
+  elsif updating then
+    select sysdate, nvl(v('APX_USER'), user)
+    into :new.modified, :new.modified_by
+    from dual;
+  end if;
+end;
+/
+
+--------------------------------------------------------------------------------------
+-- Synonyms on APX$USER
+create synonym  "APEX_ROLE"             for "APX$ROLE";
+
+
+--------------------------------------------------------------------------------------
+-- Application User
+create table "APX$USER" (
+apx_user_id number not null,
+apx_username varchar2(64) default 'AppUser' not null,
+apx_user_email varchar2(64) not null,
+apx_user_default_role_id number default 1 not null, -- 0 PUBLIC, 1 USER
+apx_user_code varchar2(8),
+apx_user_first_name varchar2(32),
+apx_user_last_name varchar2(32),
+apx_user_ad_login varchar2(64),
+apx_user_host_login varchar2(64),
+apx_user_email2 varchar2(64),
+apx_user_email3 varchar2(64),
+apx_user_twitter varchar2(64),
+apx_user_facebook varchar2(64),
+apx_user_linkedin varchar2(64),
+apx_user_xing varchar2(64),
+apx_user_other_social_media varchar2(64),
+apx_user_phone1 varchar2(64),
+apx_user_phone2 varchar2(64),
+apx_user_adress varchar2(128),
+apx_user_description varchar2(128),
+apx_user_domain_id number default 0,
+apx_user_status_id number default 1,
+apx_user_sec_level number default 0,
+apx_user_context_id number,
+apx_user_parent_user_id number,
+app_id number,
+created date,
+created_by varchar2(64),
+modified date,
+modified_by varchar2(64),
+constraint "APX$USER_ID" primary key(apx_user_id),
+constraint "APX$USER_CTX_FK" foreign key (apx_user_context_id) references "APX$CTX"(apx_context_id) on delete set null,
+constraint "APX$USER_STATUS_FK" foreign key (apx_user_status_id) references "APX$STATUS"(apx_status_id) on delete set null,
+constraint "APX$USER_DEFROLE_FK" foreign key (apx_user_default_role_id) references "APX$ROLE"(apx_role_id) on delete set null,
+constraint "APX$USER_DOMAIN_FK" foreign key (apx_user_domain_id) references "APX$DOMAIN"(apx_domain_id) on delete set null,
+constraint "APX$USER_PARENT_FK" foreign key (apx_user_parent_user_id) references "APX$USER"(apx_user_id) on delete set null
+);
+
+create unique index "APX$USER_UNQ1"    on "APX$USER"(upper(trim(apx_user_email)), app_id);
+create unique index "APX$USER_UNQ2"    on "APX$USER"(upper(trim(apx_username)), app_id);
+create index "APX$USER_APX_ID"         on "APX$USER"(app_id);
+create index "APX$USER_DOMAIN_FK_IDX"  on "APX$USER"(apx_user_domain_id);
+create index "APX$USER_CTX_FK_IDX"     on "APX$USER"(apx_user_context_id);
+create index "APX$USER_STATUS_FK_IDX"  on "APX$USER"(apx_user_status_id);
+create index "APX$USER_DEFROLE_FK_IDX" on "APX$USER"(apx_user_default_role_id);
+create index "APX$USER_PARENT_FK_IDX"  on "APX$USER"(apx_user_parent_user_id);
+create index "APX$USER_SECLEV"         on "APX$USER"(apx_user_sec_level);
+
+create sequence "APX$USER_ID_SEQ" start with 10 increment by 1 nocache;
+
+create or replace trigger "APX$USER_BIU_TRG"
+before insert or update on "APX$USER"
+referencing old as old new as new
+for each row
+begin
+  if inserting then
+    if (:new.apx_user_id is null) then
+        select "APX$USER_ID_SEQ".NEXTVAL
+        into :new.apx_user_id
+        from dual;
+    end if;
+    if (:new.app_id is null) then
+        select nvl2(v('FB_FLOW_ID'), v('FB_FLOW_ID'), v('APP_ID'))
+        into :new.app_id
+        from dual;
+    end if;
+    if (:new.apx_user_context_id is null) then
+      begin
+        select apx_context_id
+        into :new.apx_user_context_id
+        from "APX$CTX"
+        where upper(apx_context) = 'USER';
+        exception when no_data_found then
+        select 0 into :new.apx_user_context_id from dual;
+      end;
+    end if;
+    if (:new.apx_username is null) then
+      begin
+        select :new.apx_user_first_name||' '||:new.apx_user_last_name
+        into :new.apx_username
+        from dual;
+        exception when no_data_found then
+        select 'AppUser '||nvl(:new.apx_user_id, to_number(SYS_GUID(),'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'))
+        into :new.apx_username from dual;
+      end;
+    end if;
+    select sysdate, nvl(v('APX_USER'), user)
+    into :new.created, :new.created_by
+    from dual;
+  elsif updating then
+    select sysdate, nvl(v('APX_USER'), user)
+    into :new.modified, :new.modified_by
+    from dual;
+  end if;
+end;
+/
+
+--------------------------------------------------------------------------------------
+-- Synonyms on APX$USER
+create synonym  "APEX_USER"             for "APX$USER";
+
+
+--------------------------------------------------------------------------------------
+-- Application User Registration
+create table "APX$USER_REG" (
+APX_USER_ID number not null,
+apx_username varchar2(64) default 'NewAppUser' not null,
+apx_user_email varchar2(64) not null,
+apx_user_default_role_id number default 1 not null, -- 0 PUBLIC, 1 USER
+apx_user_code varchar2(8),
+apx_user_first_name varchar2(32),
+apx_user_last_name varchar2(32),
+apx_user_ad_login varchar2(64),
+apx_user_host_login varchar2(64),
+apx_user_email2 varchar2(64),
+apx_user_email3 varchar2(64),
+apx_user_twitter varchar2(64),
+apx_user_facebook varchar2(64),
+apx_user_linkedin varchar2(64),
+apx_user_xing varchar2(64),
+apx_user_other_social_media varchar2(64),
+apx_user_phone1 varchar2(64),
+apx_user_phone2 varchar2(64),
+apx_user_adress varchar2(128),
+apx_user_description varchar2(128),
+apx_user_token_created date,
+apx_user_token_valid_until date,
+apx_user_token_ts timestamp(6) with time zone,
+apx_user_token varchar2(4000),
+apx_user_domain_id number default 0,
+apx_user_status_id number default 7, -- New User
+apx_user_sec_level number default 0,
+apx_user_context_id number,
+apx_user_parent_user_id number,
+app_id number,
+created date,
+created_by varchar2(64),
+modified date,
+modified_by varchar2(64),
+constraint "APX$USREG_ID" primary key(apx_user_id),
+constraint "APX$USREG_CTX_FK" foreign key (apx_user_context_id) references "APX$CTX"(apx_context_id) on delete set null,
+constraint "APX$USREG_STATUS_FK" foreign key (apx_user_status_id) references "APX$STATUS"(apx_status_id) on delete set null,
+constraint "APX$USREG_DOMAIN_FK" foreign key (apx_user_domain_id) references "APX$DOMAIN"(apx_domain_id) on delete set null,
+constraint "APX$USREG_DEFROLE_FK" foreign key (apx_user_default_role_id) references "APX$ROLE"(apx_role_id) on delete set null
+);
+
+create unique index "APX$USREG_UNQ1"    on "APX$USER_REG"(apx_user_id, app_id);
+create unique index "APX$USREG_UNQ2"    on "APX$USER_REG"(apx_user_token);
+create unique index "APX$USREG_UNQ3"    on "APX$USER_REG"(upper(apx_user_email), app_id);
+-- create unique index "APX$USREG_UNQ4" on "APX$USER_REG"(upper(apx_username), apx_id); -- only needed when apx_username_format = username
+create index "APX$USRREG_DOMAIN_FK_IDX" on "APX$USER_REG"(apx_user_domain_id);
+create index "APX$USRREG_CTX_FK_IDX"    on "APX$USER_REG"(apx_user_context_id);
+
+create sequence "APX$USREG_ID_SEQ" start with 100 increment by 1 nocache;
+
+create or replace trigger "APX$USRREG_BIU_TRG"
+before insert or update on "APX$USER_REG"
+referencing old as old new as new
+for each row
+declare
+l_domain varchar2(100);
+l_token_valid_for_hours pls_integer;
+begin
+  if inserting then
+    if (:new.apx_user_id is null) then
+        select "APX$USREG_ID_SEQ".NEXTVAL
+        into :new.apx_user_id
+        from dual;
+    end if;
+    if (:new.app_id is null) then
+        select nvl2(v('FB_FLOW_ID'), v('FB_FLOW_ID'), v('APP_ID'))
+        into :new.app_id
+        from dual;
+    end if;
+    if (:new.apx_user_token is null) then
+      begin
+        select apx_domain_name
+        into l_domain
+        from "APX$DOMAIN"
+        where apx_domain_id = :new.apx_user_domain_id;
+      exception when no_data_found then
+        l_domain := 'NewAppUserDomain.net';
+      end;
+      begin
+        select  apex_config_item_value
+        into l_token_valid_for_hours
+        from "APEX_CONFIGURATION"
+        where  apex_config_item = 'USER_TOKEN_VALID_FOR_HOURS';
+        select sysdate,
+               sysdate + l_token_valid_for_hours / 24,
+               systimestamp,
+               apx_get_token(l_domain)
+          into :new.apx_user_token_created,
+               :new.apx_user_token_valid_until,
+               :new.apx_user_token_ts,
+               :new.apx_user_token
+        from dual;
+      exception when no_data_found then
+        select 0 into :new.apx_user_context_id from dual;
+      end;
+    end if;
+    if (:new.apx_user_context_id is null) then
+      begin
+        select apx_context_id
+        into :new.apx_user_context_id
+        from "APX$CTX"
+        where upper(apx_context) = 'USER';
+        exception when no_data_found then
+        select 0 into :new.apx_user_context_id from dual;
+      end;
+    end if;
+    if (:new.apx_username is null or :new.apx_username = 'NewAppUser') then
+      begin
+        select nvl(:new.apx_user_first_name, 'New')||' '||nvl(:new.apx_user_last_name, 'User')
+        into :new.apx_username
+        from dual;
+        exception when no_data_found then
+        select 'AppUser '||nvl(to_char(:new.apx_user_id), to_number(SYS_GUID(),'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'))
+        into :new.apx_username from dual;
+      end;
+    end if;
+    select sysdate, nvl(v('APX_USER'), user)
+    into :new.created, :new.created_by
+    from dual;
+  elsif updating then
+    select sysdate, nvl(v('APX_USER'), user)
+    into :new.modified, :new.modified_by
+    from dual;
+  end if;
+end;
+/
+
+--------------------------------------------------------------------------------------
+-- Synonyms on APX$USER_REG
+create synonym  "APEX_USER_REGISTRATION"        for "APX$USER_REG";
+create synonym  "APEX_USREG"                    for "APX$USER_REG";
+
+
+--------------------------------------------------------------------------------------
+-- User Role Assignement
+create table "APX$USER_ROLE_MAP" (
+apx_user_role_map_id number not null,
+apx_user_id number not null,
+apx_role_id number not null,
+apx_user_role_status_id number default 1,
+app_id number,
+created date,
+created_by varchar2(64),
+modified date,
+modified_by varchar2(64),
+constraint "APX$USERROLEMAP_ID" primary key (apx_user_role_map_id),
+constraint "APX$USERROLE_STAT_FK" foreign key (apx_user_role_status_id) references "APX$STATUS"(apx_status_id) on delete set null,
+constraint "APX$USER_ID_FK" foreign key (apx_user_id) references "APX$USER"(apx_user_id) on delete cascade,
+constraint "APX$ROLE_ID_FK" foreign key (apx_role_id) references "APX$ROLE"(apx_role_id) on delete cascade
+) organization index;
+
+create index "APX$USERROLMAP_STAT" on "APX$USER_ROLE_MAP"(apx_user_role_status_id);
+create unique index "APX$USERROLEMAP_UNQ" on  "APX$USER_ROLE_MAP"(app_id, apx_user_id, apx_role_id);
+
+create sequence "APX$USERROLE_SEQ" minvalue 0 start with 0 increment by 1 nocache;
+
+create or replace trigger "APX$USRROL_BIU_TRG"
+before insert or update on "APX$USER_ROLE_MAP"
+referencing old as old new as new
+for each row
+begin
+  if inserting then
+    if (:new.apx_user_role_map_id is null) then
+        select APX$userrole_seq.nextval
+        into :new.apx_user_role_map_id
+        from dual;
+    end if;
+    select sysdate, nvl(v('APX_USER'), user)
+    into :new.created, :new.created_by
+    from dual;
+  elsif updating then
+    select sysdate, nvl(v('APX_USER'), user)
+    into :new.modified, :new.modified_by
+    from dual;
+  end if;
+end;
+/
+
+------------------------------------------------------------
+-- set Roles based on default role setting in APEXP_APX_USER
+-- Default Role for each new User = USER
+create or replace trigger "APX$USRDEFROL_TRG"
+after insert or update of "APX_USER_DEFAULT_ROLE_ID" on "APX$USER"
+referencing old as old new as new
+for each row
+declare
+l_entries number;
+begin
+  if inserting then
+      insert into "APX$USER_ROLE_MAP" (app_id, apx_user_id, apx_role_id)
+      values (:new.app_id, :new.apx_user_id, :new.apx_user_default_role_id);
+  elsif updating then
+        update "APX$USER_ROLE_MAP"
+        set  (apx_role_id) = :new.apx_user_default_role_id
+        where apx_user_id = :new.apx_user_id
+		  and app_id = :new.app_id
+        and apx_role_id = :old.apx_user_default_role_id;
+  end if;
+end;
+/
+
+--------------------------------------------------------------------------------------
+-- Synonyms on APX$USER_ROLE_MAP
+create synonym  "APEX_USER_ROLE_MAP"    for "APX$USER_ROLE_MAP";
+
+
+--------------------------------------------------------------------------------------
+-- Application System Users, Roles,...
+create table "APX$BUILTIN" (
+apx_builtin_id number not null,
+apx_builtin_parent_id number,
+apx_builtin_status_id number,
+apx_builtin_context_id number,
+app_id number,
+apx_user_id number,
+apx_role_id number,
+is_admin number,
+is_public number,
+is_default number,
+constraint "APX$SYSBUILTIN_IA_CHK" check (is_admin in(0, 1)),
+constraint "APX$SYSBUILTIN_IP_CHK" check (is_public in(0, 1)),
+constraint "APX$SYSBUILTIN_ID_CHK" check (is_default in(0, 1)),
+constraint "APX$SYSBUILTIN_ID" primary key (apx_builtin_id),
+constraint "APX$USR_ID_FK" foreign key (apx_user_id) references "APX$USER"(apx_user_id) on delete cascade,
+constraint "APX$ROL_ID_FK" foreign key (apx_role_id) references "APX$ROLE"(apx_role_id) on delete cascade,
+constraint "APX$SYSBUILTIN_STATUS_FK" foreign key (apx_builtin_status_id) references "APX$STATUS"(apx_status_id) on delete set null,
+constraint "APX$SYSBUILTIN_CTX_FK" foreign key (apx_builtin_context_id) references "APX$CTX"(apx_context_id) on delete set null,
+constraint "APX$SYSBUILTINS_FK" foreign key (apx_builtin_parent_id) references "APX$BUILTIN"(apx_builtin_id) on delete set null
+) organization index;
+
+create unique index "APX$BUILTIN_UNQ" on  "APX$BUILTIN"(app_id, apx_user_id, apx_role_id);
+create index "APX$BUILTIN_CTX_FK_IDX" on "APX$BUILTIN"(apx_builtin_context_id);
+create index "APX$BUILTIN_STAT_FK_IDX" on "APX$BUILTIN"(apx_builtin_status_id);
+
+--------------------------------------------------------------------------------------
+-- Synonyms on APX$BUITIN
+create synonym  "APEX_BUILTIN"          for "APX$BUILTIN";
+
+
+--------------------------------------------------------------------------------------
+-- Apex App User Session
+create table "APX$USR_SESSION" (
+apx_user_session_id number not null,
+apx_username varchar2(64) not null,
+apx_user_email varchar2(64),
+apx_user_session_status_id number,
+app_id number,
+app_ws_id number,
+apx_user_cookie_name varchar2(64),
+apx_user_last_page number,
+apx_user_last_login timestamp default current_timestamp,
+apx_user_last_logout timestamp default null,
+apx_user_session_seconds number default 28800, -- 8 hrs.
+apx_user_session_idle_sec number default 900, -- 15 min.
+constraint "APX$SESSION_ID" primary key (apx_user_session_id),
+constraint "APX$SESSION_STATUS_FK" foreign key (apx_user_session_status_id) references "APX$STATUS"(apx_status_id) on delete set null
+);
+
+create sequence "APX$USERSESS_SEQ" start with 1 increment by 1 nocache;
+
+create or replace trigger "APX$USERSESS_BI_TRG"
 before insert on "APX$USR_SESSION"
 referencing old as old new as new
 for each row
 begin
-  if (:new.app_user_session_id is null) then
-      select "APX$APP_USERSESS_SEQ".nextval
-      into :new.app_user_session_id
+  if (:new.apx_user_session_id is null) then
+      select "APX$USERSESS_SEQ".nextval
+      into :new.apx_user_session_id
       from dual;
   end if;
   select current_timestamp, nvl(v('APP_USER'), user)
-  into :new.app_user_last_login, :new.app_username
+  into :new.apx_user_last_login, :new.apx_username
   from dual;
 end;
 /
 
--- Apex User Sessions (requires: "APX$USR_SESSION" table)
-create or replace view "APEX_USER_SESSION"
+--------------------------------------------------------------------------------------
+-- Synonyms
+create synonym  "APEX_USER_SESSION"         for "APX$USR_SESSION";
+
+
+--------------------------------------------------------------------------------------
+-- Views on "APX$USR_SESSION" table
+create view "APEX_USER_SESSIONS"
 as
-select app_user_session_id,
-  app_username,
-  app_user_email,
+select apx_user_session_id,
+  apx_username,
+  apx_user_email,
   app_id,
   app_ws_id,
-  app_user_last_login,
-  app_user_last_logout,
-  trunc(app_session_duration) as app_session_duration_seconds,
-  nvl(nullif(app_user_session_seconds,0), trunc(app_session_duration)) -
-  trunc(app_session_duration) as app_session_remaining_seconds,
-  case when app_session_duration <= app_user_session_seconds
+  apx_user_session_status_id,
+  apx_user_last_login,
+  apx_user_last_logout,
+  trunc(apx_session_duration) as apx_session_duration_seconds,
+  nvl(nullif(apx_user_session_seconds,0), trunc(apx_session_duration)) -
+  trunc(apx_session_duration) as apx_session_remaining_seconds,
+  case when apx_session_duration <= apx_user_session_seconds
           then 'Y'
           else 'N'
-  end as app_session_is_current
+  end as apx_session_is_current
 from (
-select app_user_session_id,
-  app_username,
-  app_user_email,
+select apx_user_session_id,
+  apx_username,
+  apx_user_email,
   app_id,
   app_ws_id,
-  app_user_last_login,
-  app_user_last_logout,
-  app_user_session_seconds ,
-  trunc((cast(current_timestamp as date) - date '1970-01-01')*24*60*60) as now,
-  ((cast(app_user_last_login as date) - date '1970-01-01')*24*60*60) as login_second,
+  apx_user_last_login,
+  apx_user_last_logout,
+  apx_user_session_seconds,
+  apx_user_session_status_id,
+  trunc((cast(current_timestamp as date) - date '1970-01-01')*24*60*60) as just_now,
+  ((cast(apx_user_last_login as date) - date '1970-01-01')*24*60*60) as login_second,
   trunc((cast(current_timestamp as date) - date '1970-01-01')*24*60*60) -
-  ((cast(app_user_last_login as date) - date '1970-01-01')*24*60*60) as app_session_duration
+  ((cast(apx_user_last_login as date) - date '1970-01-01')*24*60*60) as apx_session_duration
 from  "APX$USR_SESSION"
 );
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Gather Stats for new/all Objects
+--------------------------------------------------------------------------------------
+begin
+dbms_stats.gather_schema_stats(user);
+end;
+/
+
 
 
 -----------------------------------------------------------------------------------------------------
@@ -2949,7 +3740,7 @@ create table "APX$SOURCE" (
 apx_source_id number not null, -- PK
 apx_source_name varchar2(64) not null,
 apx_source_value varchar2(2000),
-apx_default_value varchar2(2000),
+apx_source_default_value varchar2(2000),
 apx_source_code varchar2(4000),
 apx_sourcecode clob,
 apx_parent_source_id number,
@@ -3006,6 +3797,319 @@ end;
 /
 
 create synonym  "APEX_SOURCE"        for "APX$SOURCE";
+
+
+-----------------------------------------------------------------------------------------------------
+-- App Status Table (for all sorts of Apex Object Types)
+
+-- @requires "APX$" "APX$CTX"
+-----------------------------------------------------------------------------------------------------
+
+---- drop first
+
+
+-- drop view        "APEX_ATTACHEMENTS";
+-- drop synonym     "APEX_ATTACHEMENT";
+
+-- drop sequence    "APX$ATTACHEMENT_ID_SEQ";
+-- drop trigger     "APX$ATTACHEMENT_BIU_TRG";
+
+-- drop table       "APX$ATTACHEMENT" purge;
+
+
+-- drop view        "APEX_WEB_CONTENT";
+-- drop synonym     "APEX_CONTENT";
+
+-- drop sequence    "APX$CONTENT_ID_SEQ";
+-- drop trigger     "APX$CONTENT_BIU_TRG";
+
+-- drop table       "APX$CONTENT" purge;
+
+
+-- drop view        "APEX_AUTHORS";
+-- drop synonym     "APEX_AUTHOR";
+
+-- drop sequence    "APX$AUTHOR_ID_SEQ";
+-- drop trigger     "APX$AUTHOR_BIU_TRG";
+
+-- drop table       "APX$AUTHOR" purge;
+
+-----------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------
+--  DDL for Table APX$AUTHOR
+--------------------------------------------------------
+
+create table "APX$AUTHOR" (
+apx_author_id number not null,
+apx_author varchar2(64) not null,
+apx_author_code varchar2(8),
+apx_parent_author_id number,
+apx_author_sec_level number default 0,
+author_name varchar2(64),
+author_email varchar2(128),
+author_photo_1 blob,
+author_photo_2 blob,
+author_photo_3 blob,
+author_social_media_1 varchar2(128),
+author_social_media_2 varchar2(128),
+author_social_media_3 varchar2(128),
+author_social_media_4 varchar2(128),
+author_social_media_5 varchar2(128),
+app_id number,
+created date,
+created_by varchar2(64),
+modified date,
+modified_by varchar2(64),
+constraint "APX$AUTHOR_ID_PK" primary key (apx_author_id),
+constraint "APX$AUTHOR_PARENT_ID_FK" foreign key (apx_parent_author_id) references "APX$AUTHOR"(apx_author_id)
+);
+
+create unique index "APX$AUTHOR_UNQ1" on "APX$AUTHOR"(upper(trim(apx_author)), upper(trim(apx_author_code)), app_id);
+
+create index "APX$AUTHOR_PARENT_ID_IDX" on "APX$AUTHOR"(apx_parent_author_id);
+create index "APX$AUTHOR_CODE_IDX" on "APX$AUTHOR"(apx_author_code, apx_author);
+create index "APX$AUTHOR_APP_ID_IDX" on "APX$AUTHOR"(app_id);
+
+create sequence "APX$AUTHOR_ID_SEQ" start with 1 increment by 1 nocache;
+
+create or replace trigger "APX$AUTHOR_BIU_TRG"
+before insert or update on "APX$AUTHOR"
+referencing old as old new as new
+for each row
+begin
+  if inserting then
+    if (:new.apx_author_id is null) then
+        select "APX$AUTHOR_ID_SEQ".NEXTVAL
+        into :new.apx_author_id
+        from dual;
+    end if;
+    select sysdate, nvl(v('apx_USER'), user)
+    into :new.created, :new.created_by
+    from dual;
+  elsif updating then
+    select sysdate, nvl(v('apx_USER'), user)
+    into :new.modified, :new.modified_by
+    from dual;
+  end if;
+end;
+/
+
+create synonym  "APEX_AUTHOR"                    for "APX$AUTHOR";
+
+-----------------------------------------------------------------------------------------------------
+-- Views on APX$AUTHOR
+
+create view "APEX_AUTHORS"
+as
+ select s.apx_author_id as apex_author_id,
+        s.apx_author as apex_author,
+        s.apx_author_code as apex_author_code,
+        s.apx_parent_author_id as apex_parent_author_id,
+        (select b.apx_author from "APEX_AUTHOR" b
+         where b.apx_author_id = s.apx_parent_author_id) as apex_parent_author,
+        s.apx_author_sec_level as apex_author_security_level,
+        s.app_id as app_id
+from  "APEX_AUTHOR" s
+order by 1;
+
+
+-----------------------------------------------------------------------------------------------------
+-- Initial Data
+
+-- DEFAULT Author, Content, Attachement first
+insert into "APX$AUTHOR" (apx_author_id, apx_author, apx_author_code, app_id)
+values ('0', 'DEFAULT', 'DEF', v('FB_FLOW_ID'));
+
+commit;
+
+
+--------------------------------------------------------
+--  DDL for Table APX$CONTENT
+--------------------------------------------------------
+create table "APX$CONTENT" (
+apx_content_id number not null,
+apx_content_title varchar2(128) not null,
+apx_content_sub_title  varchar2(128),
+apx_content varchar2(4000),
+apx_parent_content_id number,
+apx_content_sec_level number default 0,
+apx_content_type_id number default 0,
+app_id number,
+author_id number,
+created date,
+created_by varchar2(64),
+modified date,
+modified_by varchar2(64),
+constraint "APX$CONTENT_ID_PK" primary key (apx_content_id),
+constraint "APX$CONTENT_PARENT_ID_FK" foreign key (apx_parent_content_id) references "APX$CONTENT"(apx_content_id) on delete cascade,
+constraint "APX$CONTENT_AUTHOR_FK" foreign key (author_id) references "APX$AUTHOR"(apx_author_id) on delete set null,
+constraint "APX$CONTENT_TYPE_ID_FK" foreign key (apx_content_type_id) references "APX$"(apx_id) on delete set null
+);
+
+create unique index "APX$CONTENT_UNQ1" on "APX$CONTENT"(upper(trim(apx_content_title)), upper(trim(apx_content_sub_title)), app_id);
+
+create index "APX$CONTENT_PARENT_ID_IDX" on "APX$CONTENT"(apx_parent_content_id);
+create index "APX$CONTENT_TITLESUB_IDX" on "APX$CONTENT"(apx_content_title, apx_content_sub_title);
+create index "APX$CONTENT_APP_ID_IDX" on "APX$CONTENT"(app_id);
+create index "APX$CONTENT_AUTHOR_IDX" on "APX$CONTENT"(author_id);
+create index "APX$CONTENT_TYPE_IDX" on "APX$CONTENT"(apx_content_type_id);
+
+create sequence "APX$CONTENT_ID_SEQ" start with 1 increment by 1 nocache;
+
+create or replace trigger "APX$CONTENT_BIU_TRG"
+before insert or update on "APX$CONTENT"
+referencing old as old new as new
+for each row
+begin
+  if inserting then
+    if (:new.apx_content_id is null) then
+        select "APX$CONTENT_ID_SEQ".NEXTVAL
+        into :new.apx_content_id
+        from dual;
+    end if;
+    select sysdate, nvl(v('apx_USER'), user)
+    into :new.created, :new.created_by
+    from dual;
+  elsif updating then
+    select sysdate, nvl(v('apx_USER'), user)
+    into :new.modified, :new.modified_by
+    from dual;
+  end if;
+end;
+/
+
+create synonym  "APEX_CONTENT"                    for "APX$CONTENT";
+
+-----------------------------------------------------------------------------------------------------
+-- Views on APX$CONTENT
+
+create view "APEX_WEB_CONTENT"
+as
+ select s.apx_content_id as apex_content_id,
+        a.apx_author as apex_content_author,
+        s.apx_content_title as apex_content_title,
+        s.apx_content_sub_title as apex_content_subtitle,
+        s.apx_content as apex_content,
+        apx.apx_object as apex_content_type,
+        s.apx_content_type_id as apex_content_type_id,
+        s.apx_parent_content_id as apex_parent_content_id,
+        (select b.apx_content from "APEX_CONTENT" b
+         where b.apx_content_id = s.apx_parent_content_id) as apex_parent_content,
+        s.apx_content_sec_level as apex_content_security_level,
+        s.app_id as app_id
+from  "APEX_CONTENT" s left outer join "APEX_AUTHOR" a
+on (s.author_id = a.apx_author_id)
+left outer join "APEX_APX" apx
+on (s.apx_content_type_id = apx.apx_id)
+order by 1;
+
+-----------------------------------------------------------------------------------------------------
+-- Initial Data
+
+-- DEFAULT Author, Content, Attachement first
+insert into "APX$CONTENT" (apx_content_id, apx_content_title, apx_content_sub_title, author_id, app_id)
+values (0, 'DEFAULT', 'Default Content', 0, v('FB_FLOW_ID'));
+
+commit;
+
+
+--------------------------------------------------------
+--  DDL for Table APX$ATTACHEMENT
+--------------------------------------------------------
+create table "APX$ATTACHEMENT" (
+apx_attachement_id number not null,
+apx_content_id number default 0 not null,
+apx_attachement_code varchar2(20),
+apx_parent_attachement_id number,
+apx_attachement_sec_level number default 0,
+attachement_filename varchar2(512),
+attachement_mime_type varchar2(512),
+attachement_comment varchar2(128),
+attachement_binary blob,
+attachement_size_bytes number,
+attachement_type_id number,
+app_id number,
+created date,
+created_by varchar2(64),
+modified date,
+modified_by varchar2(64),
+constraint "APX$ATTACHMNT_ID_PK" primary key (apx_attachement_id),
+constraint "APX$ATTACHMNT_PARENT_ID_FK" foreign key (apx_parent_attachement_id) references "APX$ATTACHEMENT"(apx_attachement_id) on delete cascade,
+constraint "APX$ATTACHMNT_CONTENT_ID_FK" foreign key (apx_content_id) references "APX$CONTENT"(apx_content_id) on delete cascade,
+constraint "APX$ATTACHMNT_TYPE_ID_FK" foreign key (attachement_type_id) references "APX$"(apx_id) on delete set null
+);
+
+create index "APX$ATTACHMNT_PARENT_ID_IDX"  on "APX$ATTACHEMENT"(apx_parent_attachement_id);
+create index "APX$ATTACHMNT_CONTENT_FK_IDX" on "APX$ATTACHEMENT"(apx_content_id);
+create index "APX$ATTACHMNT_TYPE_ID_IDX"     on "APX$ATTACHEMENT"(attachement_type_id);
+create index "APX$ATTACHMNT_APP_ID_IDX"     on "APX$ATTACHEMENT"(app_id);
+
+create sequence "APX$ATTACHEMENT_ID_SEQ" start with 1 increment by 1 nocache;
+
+create or replace trigger "APX$ATTACHEMENT_BIU_TRG"
+before insert or update on "APX$ATTACHEMENT"
+referencing old as old new as new
+for each row
+begin
+  if inserting then
+    if (:new.apx_attachement_id is null) then
+        select "APX$ATTACHEMENT_ID_SEQ".NEXTVAL
+        into :new.apx_attachement_id
+        from dual;
+    end if;
+    select sysdate, nvl(v('apx_USER'), user)
+    into :new.created, :new.created_by
+    from dual;
+  elsif updating then
+    select sysdate, nvl(v('apx_USER'), user)
+    into :new.modified, :new.modified_by
+    from dual;
+  end if;
+end;
+/
+
+create synonym  "APEX_ATTACHEMENT"                    for "APX$ATTACHEMENT";
+
+-----------------------------------------------------------------------------------------------------
+-- Views on APX$ATTACHEMENT
+
+create view "APEX_ATTACHEMENTS"
+as
+ select s.apx_attachement_id as apex_attachement_id,
+        c.author_id as apex_content_author_id,
+        a.apx_author as apex_content_author,
+        c.apx_content_title as apex_content_title,
+        c.apx_content_sub_title as apex_content_subtitle,
+        s.apx_attachement_code as apex_attachement_code,
+        apx.apx_object as apex_attachement_type,
+        s.attachement_filename as attachement_filename,
+        s.attachement_mime_type as attachement_mime_type,
+        s.attachement_comment as attachement_comment,
+        s.attachement_size_bytes as attachement_size_bytes,
+        s.apx_parent_attachement_id as apex_parent_attachement_id,
+        (select b.apx_attachement_code from "APEX_ATTACHEMENT" b
+         where b.apx_attachement_id = s.apx_parent_attachement_id) as apex_parent_attachement,
+        s.apx_attachement_sec_level as attachement_security_level,
+        s.app_id as app_id
+from  "APEX_ATTACHEMENT" s left outer join "APEX_CONTENT" c
+on (s.apx_content_id = c.apx_content_id)
+left outer join "APEX_AUTHOR" a
+on (c.author_id = a.apx_author_id)
+left outer join "APEX_APX" apx
+on (s.attachement_type_id = apx.apx_id)
+order by 1;
+
+
+-----------------------------------------------------------------------------------------------------
+-- Status Data
+
+-- DEFAULT Status first
+insert into "APX$ATTACHEMENT" (apx_attachement_id, apx_content_id, apx_attachement_code, app_id)
+values (0, 0, 'DEFAULT', v('FB_FLOW_ID'));
+
+commit;
+
 
 
 ------------------------------------------------------------------
@@ -3309,6 +4413,7 @@ return null;
 END "APX_GET_TOKEN";
 /
 
+<<<<<<< HEAD
 set define off
 --------------------------------------------------------------------------------
 --
@@ -4310,6 +5415,1010 @@ end;
 
 set pages 0 line 120 define off verify off feed off echo off timing off
 
+=======
+set define off
+--------------------------------------------------------------------------------
+--
+-- Title: apx.pkg (APEX MAIN PACKAGE)
+--
+-- Description: PL/SQL Package to provide an interface to subprocedures and functions.
+--
+-- Parameters: None
+--
+-- Requirements (see required section for implementation):
+-- apxkey function, APX$APP_USER_SESSION table, APEX_APP_USER_SESSION view
+--
+-- Compatible: validated against Oracle 12c.
+-- Lower versions are partly supported but it's not guaranteed to stay that way.
+--
+-- The User compiling this Package must have at least the following privileges:
+--   RESOURCE and CONNECT Roles
+--   APEX_ADMINISTRATOR_ROLE
+--   select on "SYS"."V_$INSTANCE" and DBA_REGISTRY
+--   create for views, tables, packages and synonyms
+--
+-- -- Example for User APXDBA:
+--
+--    GRANT "CONNECT" TO "APXDBA";
+--    GRANT "RESOURCE" TO "APXDBA";
+--    GRANT "APEX_ADMINISTRATOR_ROLE" TO "APXDBA";
+--
+--    GRANT SELECT ON "SYS"."V_$INSTANCE" TO "APXDBA";
+--    GRANT SELECT ON "SYS"."DBA_REGISTRY" TO "APXDBA";
+--    GRANT EXECUTE ON "SYS"."DBMS_CRYPTO" TO "APXDBA";
+--    GRANT DEBUG CONNECT SESSION TO "APXDBA";
+--    GRANT DEBUG ANY PROCEDURE TO "APXDBA";
+--    GRANT CREATE VIEW TO "APXDBA";
+--    GRANT CREATE TABLE TO "APXDBA";
+--    GRANT CREATE TRIGGER TO "APXDBA";
+--    GRANT CREATE PROCEDURE TO "APXDBA";
+--    GRANT CREATE PUBLIC SYNONYM TO "APXDBA";
+--
+-- -----------------------------------------------------------------------------
+-- History:      12.09.2007 SO: created
+--               29.01.2017 SO: refactored for APEX
+--               12.02.2017 SO: integrated in new Git Repository APX
+--               20.11.2017 SO: outfactored encryption to interfaces, session mgmt
+--
+-- Disclaimer: the software is delivered "as-is", and the author takes
+-- no responsiblity nor guarantee for the proper function of this script
+-- nor for any damages or misfunctions that occure from using this software.
+--
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- required objects and interfaces
+--------------------------------------------------------------------------------
+
+
+-- Apex User Session Tables and Views
+/*
+-- Cleanup
+drop view "APEX_APP_USER_SESSION";
+drop sequence "APX$APP_USERSESS_SEQ";
+drop trigger "APX$APP_USERSESS_BI_TRG";
+drop table "APX$APP_USER_SESSION" purge;
+
+
+create table "APX$APP_USER_SESSION" (
+app_user_session_id number not null primary key,
+app_username varchar2(64) not null,
+app_user_email varchar2(64),
+app_id number,
+app_ws_id number,
+app_user_pwd varchar2(64),
+app_user_cookie_name varchar2(64),
+app_user_last_page number,
+app_user_last_login timestamp default current_timestamp,
+app_user_last_logout timestamp default null,
+app_user_session_seconds number default 28800, -- 8 hrs.
+app_user_session_idle_sec number default 900 -- 15 min.
+);
+
+create sequence "APX$APP_USERSESS_SEQ" start with 1 increment by 1 nocache;
+
+create or replace trigger "APX$APP_USERSESS_BI_TRG"
+before insert on "APX$APP_USER_SESSION"
+referencing old as old new as new
+for each row
+begin
+  if (:new.app_user_session_id is null) then
+      select "APX$APP_USERSESS_SEQ".nextval
+      into :new.app_user_session_id
+      from dual;
+  end if;
+  select current_timestamp, nvl(v('APP_USER'), user)
+  into :new.app_user_last_login, :new.app_username
+  from dual;
+end;
+/
+
+-- Apex User Sessions (requires: "APX$APP_USER_SESSION" table)
+create or replace view "APEX_APP_USER_SESSION"
+as
+select app_user_session_id,
+  app_username,
+  app_user_email,
+  app_id,
+  app_ws_id,
+  app_user_last_login,
+  app_user_last_logout,
+  trunc(app_session_duration) as app_session_duration_seconds,
+  nvl(nullif(app_user_session_seconds,0), trunc(app_session_duration)) -
+  trunc(app_session_duration) as app_session_remaining_seconds,
+  case when app_session_duration <= app_user_session_seconds
+          then 'Y'
+          else 'N'
+  end as app_session_is_current
+from (
+select app_user_session_id,
+  app_username,
+  app_user_email,
+  app_id,
+  app_ws_id,
+  app_user_pwd,
+  app_user_last_login,
+  app_user_last_logout,
+  app_user_session_seconds ,
+  trunc((cast(current_timestamp as date) - date '1970-01-01')*24*60*60) as now,
+  ((cast(app_user_last_login as date) - date '1970-01-01')*24*60*60) as login_second,
+  trunc((cast(current_timestamp as date) - date '1970-01-01')*24*60*60) -
+  ((cast(app_user_last_login as date) - date '1970-01-01')*24*60*60) as app_session_duration
+from  "APX$APP_USER_SESSION"
+);
+
+-- Encryption key wrapped
+create or replace function apxkey wrapped
+a000000
+1
+abcd
+abcd
+abcd
+abcd
+abcd
+abcd
+abcd
+abcd
+abcd
+abcd
+abcd
+abcd
+abcd
+abcd
+abcd
+8
+be f7
+WqX4PVV3F1X4nIQXM02Si0QUJU8wg2Lw7cusfI5gkPiOvx1h+ZnTByUZJwteWWurSYaPXQZN
+ICB8X5qh/zrPoZ/LC6zG+E4jP2sbwfi9IOt6yUbIj+DCAOxHr2t4bP/I8l8aN1/H+r3CvvF8
+86lTVNnYRCAjZY+oFMIlVRzF9YnLh/IFa2ifcbiWiHuVo7tuGQmae22gPXEws3sbAsLy3tS+
+UEeCC1w9t4Gbmoq9G7EgP3pz0Ws=
+
+/
+
+
+*/
+
+------------------------------------------------------------------
+
+-- Standard Procedures and Functions are defined in this Package
+-- and used by APX Packages Scripts and other processes.
+-- This Package is intended to run standalone and provide a hub
+-- for all Sub Packages and Procedures.
+--
+-- Common Functions and Procedures are made public by creating
+-- standalone Procedures and Functions that server as an interface
+-- to those commeon objects.
+--
+-- This is planned to make Migration and Renaming easier, since you
+-- just need to update the reference in the wrapper to make things
+-- work again;-). To make sure these wrappers are in place, this
+-- package checks them at startup (see init) und creates them as needed.
+-- We keep basic logging and debugging Functions in here
+-- to avoid the henn-egg problem of logging/debugging this package,
+-- if its the only one in place (which it is in mimimal configuration:-)
+
+------------------------------------------------------------------
+--                          Package Specification
+------------------------------------------------------------------
+CREATE OR REPLACE PACKAGE "APX" AUTHID CURRENT_USER
+IS
+
+------------------------------------------------------------------
+-- Global Variables, REF_CURSORS and Types
+------------------------------------------------------------------
+
+-- names of objects (tables, views... usually 30 bytes)
+SUBTYPE objname IS ALL_OBJECTS.SUBOBJECT_NAME%TYPE;
+
+-- generic weak REF CURSOR (no RETURN Clause)
+TYPE curtype IS REF CURSOR;
+
+-- globals
+g_debug boolean;
+
+-- app sso
+ssomaster number := 1000;
+
+g_txt varchar2(4000);
+g_dat date;
+g_int pls_integer;
+g_num number;
+
+-- status output
+c_ok CONSTANT VARCHAR2(5) := 'OK.';
+c_fld CONSTANT VARCHAR2(10) := 'failed!';
+c_con CONSTANT VARCHAR2(20) := 'connected';
+c_discon CONSTANT VARCHAR2(20) := 'disconnected';
+
+-- padding
+c_pad CONSTANT PLS_INTEGER := 85;
+
+-- name of this package
+l_pkg objname := 'APX';
+
+-- Step Markers for Debug
+l_stepname objname := 'null';
+l_step pls_integer := 0;
+l_step_comment varchar2(1000);
+l_str varchar2(4000);
+l_apxcon varchar2(100);
+
+-- APEX Session
+p_session_id varchar2(512);
+p_app_id number;
+p_ws_id number;
+p_user_id number;
+
+-- majorversion of current instance
+db_version PLS_INTEGER;
+
+-- majorversion of current APEX instance
+apx_version PLS_INTEGER;
+
+-- print_pretty_line counter
+ppl_cnt PLS_INTEGER := 0;
+
+-- print_pretty_line_length
+ppl_len PLS_INTEGER := 0;
+
+------------------------------------------------------------------
+-- Package Procedures and Functions
+------------------------------------------------------------------
+
+------------------------------------------------------------------
+-- Setter and Getter Procedures and Functions
+-- are used to set and get global variable values
+-- Overloaded to support real types (char, int, date)
+------------------------------------------------------------------
+
+PROCEDURE "SETVAL" (
+p_variable in varchar2,
+p_value in varchar2,
+p_initialize in boolean := false);
+
+
+FUNCTION "GETVAL" (
+p_variable in varchar2,
+p_initialize in boolean := false)
+return varchar2;
+
+------------------------------------------------------------------
+-- Encryption Procedure
+-- for Credential Management
+------------------------------------------------------------------
+
+-- Encrypt VARCHAR2 & return RAW
+function "ENCRYPT" (
+input_string       VARCHAR2
+) return raw;
+
+
+------------------------------------------------------------------
+-- Apex Environment
+------------------------------------------------------------------
+
+-- Get Workspace ID by Workspacename
+function "GETWSID" (
+p_ws_name apex_workspaces.workspace%type
+) return apex_workspaces.workspace_id%type;
+
+-- Get Workspace ID by Applicationname
+function "GETWSID" (
+p_app_id apex_applications.application_id%type
+) return apex_workspaces.workspace_id%type;
+
+
+-- Get Workspacename by Workspace ID
+function "GETWS" (
+p_app_id apex_applications.application_id%type,
+p_ws_id apex_workspaces.workspace_id%type default null
+) return apex_workspaces.workspace%type;
+
+
+-- Get Application ID by Applicationname
+function "GETAPPID" (
+p_app_name apex_applications.application_name%type
+) return apex_applications.application_id%type;
+
+
+-- Get Applicationame by Application ID
+function "GETAPP" (
+p_app_id apex_applications.application_id%type
+) return apex_applications.application_name%type;
+
+
+-- Get the main APEX Database Schema (Owner of the API)
+function "GETAPEXOWNER"
+return apex_applications.owner%type;
+
+
+-- redirect to a given URL
+procedure "REDIRECT" (
+p_url in varchar2
+);
+
+
+------------------------------------------------------------------
+-- DBMS_OUTPUT Limitations:
+--
+-- Oracle 9i:
+--  Errors raised:
+--  ORU-10027: buffer overflow, limit of <buf_limit> bytes.
+--  ORU-10028:line length overflow, limit of 255 bytes
+
+-- Oracle 10g:
+--  Errors raised:
+--  ORU-10027: buffer overflow, limit of <buf_limit> bytes.
+--  ORU-10028:line length overflow, limit of 32767 bytes per line.
+
+-- Note: Procedures assume LINESIZE 100 in SQL*Plus
+------------------------------------------------------------------
+
+
+------------------------------------------------------------------
+-- PrintLine: Wrapper Procedure to DBMS_OUTPUT
+-- avoids ORU-10028 Errors with lines larger 255 bytes (up until 9i)
+-- adopted from Steven Feuerstein: PL/SQL Best Practices (B-01)
+------------------------------------------------------------------
+PROCEDURE "PL_PRINT_LINE" (
+str_in IN VARCHAR2,
+len_in IN INTEGER := 100,
+expand_in IN BOOLEAN := TRUE);
+
+------------------------------------------------------------------
+-- PrintPrettyLine: Wrapper Procedure to DBMS_OUTPUT
+-- see PrintLine for Description
+-- added support for "pretty" line breaks at last blank of line.
+------------------------------------------------------------------
+PROCEDURE "PL_PRINT_PRETTY_LINE" (
+str_in IN VARCHAR2,
+len_in IN INTEGER := 100,
+expand_in IN BOOLEAN := TRUE);
+
+------------------------------------------------------------------
+-- Wrapper Procedure to DBMS_OUTPUT for easier access
+-- and extended functionality. Calls to pl and ppl are made from it.
+------------------------------------------------------------------
+PROCEDURE "PL_PRINT" (
+str_in IN VARCHAR2,
+len_in IN NUMBER DEFAULT 100,
+p_line IN BOOLEAN DEFAULT TRUE, -- use put_line ?
+c_padding IN NUMBER DEFAULT NULL, -- use rc_pad?
+c_padchar IN CHAR DEFAULT '.',        -- character used for c_padding
+print_pretty IN BOOLEAN := FALSE,  -- use PrintPretty for Linebreaks
+expand_in IN BOOLEAN := TRUE);
+
+------------------------------------------------------------------
+-- Wrapper Procedures to HTP.PRN and HTP.PRINT for easier access
+-- htp.print - a string terminated with a newline.
+-- htp.prn - the specified string, not terminated with a newline.
+-- Parameters: p_txt, p_date, p_int - the string to generate.
+------------------------------------------------------------------
+
+PROCEDURE "HT_PRINTN" (p_txt in varchar2);
+PROCEDURE "HT_PRINTN" (p_date in date);
+PROCEDURE "HT_PRINTN" (p_int in number);
+
+PROCEDURE "HT_PRINT" (p_txt in varchar2);
+PROCEDURE "HT_PRINT" (p_date in date);
+PROCEDURE "HT_PRINT" (p_int in number);
+
+------------------------------------------------------------------
+-- Wrapper Procedures to HTP.PS and HTP.PRINTS for easier access
+-- Both these subprograms generate a string and replace
+-- the following characters with the corresponding escape sequence.
+-- < to &lt;
+-- > to &gt;
+-- " to &quot;
+-- & to &amp;
+-- htp.prints an escaped string terminated with a newline.
+-- htp.ps an escaped string not terminated with a newline.
+-- Parameters: ctext - the string where to perform character substitution.
+-- Generates: A string.
+------------------------------------------------------------------
+
+PROCEDURE "HT_PRINTS"(p_txt in varchar2);
+
+PROCEDURE "HT_PS"(p_txt in varchar2);
+
+------------------------------------------------------------------
+-- Conversion Functions for special PL/SQL types
+-- and extended functionality.
+------------------------------------------------------------------
+
+-- Conversion Functions for Booleans
+FUNCTION "NUM_TO_BOOLEAN" (
+  number_in IN NUMBER
+, false_num IN NUMBER := 0 -- which value evaluates to false?
+, operand IN VARCHAR2 := '>'
+) RETURN BOOLEAN;
+
+FUNCTION "BOOLEAN_TO_NUM" (
+  boolean_in IN BOOLEAN
+, true_num IN NUMBER := 1 -- which value is true?
+) RETURN NUMBER;
+
+
+END "APX";
+/
+
+
+------------------------------------------------------------------
+--                          Package Body
+------------------------------------------------------------------
+CREATE OR REPLACE PACKAGE BODY "APX"
+IS
+
+------------------------------------------------------------------
+-- Private Procedures and Functions
+------------------------------------------------------------------
+-- Encryption
+num_key_bytes NUMBER := 256/8;        -- key length 256 bits (32 bytes)
+key_bytes_raw RAW (32); -- stores 256-bit encryption key
+
+-- Decrypt RAW & return VARCHAR2
+function  "DECRYPT" (
+p_encrypted_raw      RAW
+) return varchar2
+is
+   output_string      VARCHAR2 (200);
+   decrypted_raw      RAW (2000);             -- stores decrypted binary text
+BEGIN
+  --output_string := UTL_I18N.RAW_TO_CHAR (p_encrypted_raw, 'AL32UTF8');
+  --DBMS_OUTPUT.PUT_LINE ( 'Input hash: ' || output_string);
+
+  -- using interface "APX_ENCRYPT"
+  output_string := "APX_DECRYPT"(p_encrypted_raw);
+
+  --DBMS_OUTPUT.PUT_LINE ('Decrypted string: ' || output_string);
+return  output_string;
+
+exception when others then
+--DBMS_OUTPUT.PUT_LINE ('Input hash: ' || output_string);
+--DBMS_OUTPUT.PUT_LINE (sqlerrm);
+return null;
+END "DECRYPT";
+
+
+--------------------------------------------------------------------------------
+-- Public Procedures and Functions
+--------------------------------------------------------------------------------
+
+------------------------------------------------------------------
+-- Encryption Procedure
+-- for Credential Management
+------------------------------------------------------------------
+
+-- Encrypt VARCHAR2 & return RAW
+function "ENCRYPT" (
+input_string       VARCHAR2
+) return raw
+is
+  output_string      VARCHAR2 (200);
+  encrypted_raw      RAW (2000);             -- stores encrypted binary text
+BEGIN
+  --DBMS_OUTPUT.PUT_LINE ( 'Original string: ' || input_string);
+
+  -- using interface "APX_ENCRYPT"
+   encrypted_raw := "APX_ENCRYPT"(input_string);
+
+   --output_string := UTL_I18N.RAW_TO_CHAR (encrypted_raw, 'AL32UTF8');
+  --DBMS_OUTPUT.PUT_LINE ( 'Original string: ' || output_string);
+return encrypted_raw;
+exception when others then
+--DBMS_OUTPUT.PUT_LINE ('Input hash: ' || output_string);
+--DBMS_OUTPUT.PUT_LINE (sqlerrm);
+return null;
+end "ENCRYPT";
+
+------------------------------------------------------------------
+-- Apex Environment
+------------------------------------------------------------------
+
+-- Get Workspace ID by Workspacename
+function "GETWSID" (
+p_ws_name apex_workspaces.workspace%type
+) return apex_workspaces.workspace_id%type
+is
+l_ws_id apex_workspaces.workspace_id%type;
+begin
+  select workspace_id
+  into l_ws_id
+  from apex_workspaces
+  where upper(workspace) = upper(trim(p_ws_name));
+return l_ws_id;
+exception when others then
+raise;
+end "GETWSID";
+
+-- Get Workspace ID by Applicationname
+function "GETWSID" (
+p_app_id apex_applications.application_id%type
+) return apex_workspaces.workspace_id%type
+is
+l_ws_id apex_workspaces.workspace_id%type;
+begin
+  select workspace_id
+  into l_ws_id
+  from apex_workspaces
+  where workspace = (
+    select workspace
+    from apex_applications
+    where application_id = p_app_id);
+return l_ws_id;
+exception when others then
+raise;
+end "GETWSID";
+
+-- Get Workspacename by Workspace ID
+function "GETWS" (
+p_app_id apex_applications.application_id%type,
+p_ws_id apex_workspaces.workspace_id%type default null
+) return apex_workspaces.workspace%type
+is
+l_ws apex_workspaces.workspace%type;
+begin
+  if p_ws_id is not null then -- we get the workspace_name by it's ID
+    select workspace
+    into l_ws
+    from apex_workspaces
+    where workspace_id = p_ws_id;
+  else -- we get the workspace_name by getting the WS_ID for an Application ID (default)
+    l_ws := getws(null, getwsid(p_app_id));
+  end if;
+return l_ws;
+exception when others then
+raise;
+end "GETWS";
+
+
+-- Get Application ID by Applicationname
+function "GETAPPID" (
+p_app_name apex_applications.application_name%type
+) return apex_applications.application_id%type
+is
+l_app_id apex_applications.application_id%type;
+begin
+  select application_id
+  into l_app_id
+  from apex_applications
+  where upper(application_name) = upper(trim(p_app_name));
+return l_app_id;
+exception when others then
+raise;
+end "GETAPPID";
+
+-- Get Applicationame by Application ID
+function "GETAPP" (
+p_app_id apex_applications.application_id%type
+) return apex_applications.application_name%type
+is
+l_app apex_applications.application_name%type;
+begin
+  select application_name
+  into l_app
+  from apex_applications
+  where application_id = p_app_id;
+return l_app;
+exception when others then
+raise;
+end "GETAPP";
+
+-- Get the main APEX Database Schema (Owner of the API)
+function "GETAPEXOWNER"
+return apex_applications.owner%type
+is
+  l_apex_owner apex_applications.owner%type;
+begin
+  select owner
+  into l_apex_owner
+  from apex_applications
+  where WORKSPACE = 'INTERNAL'
+  and rownum = 1;
+return l_apex_owner;
+exception when others then
+raise;
+end "GETAPEXOWNER";
+
+
+-- redirect to a given URL
+procedure "REDIRECT" (
+p_url in varchar2
+)
+is
+  l_url varchar2(4000);
+begin
+  l_url := sys.utl_url.escape ( url => p_url, escape_reserved_chars => false );
+  sys.owa_util.redirect_url(l_url);
+  apex_application.stop_apex_engine;
+end "REDIRECT";
+
+
+------------------------------------------------------------------
+-- Setter and Getter Procedures and Functions
+-- used to set and get global variable values
+------------------------------------------------------------------
+
+PROCEDURE "SETVAL" (
+p_variable in varchar2,
+p_value in varchar2,
+p_initialize in boolean := false)
+is
+l_sql varchar2(4000);
+begin
+  -- set the string
+  l_sql := 'begin '|| p_variable||':= :val ; end;';
+  if (p_initialize) then -- the value gets pruned before
+    execute immediate l_sql using in '';
+    --dbms_output.put_line('apx.g_txt (in package): '||apx.g_txt); -- needed for testing
+  end if;
+  -- set value
+  execute immediate l_sql using in p_value;
+end;
+
+
+FUNCTION "GETVAL" (
+p_variable in varchar2,
+p_initialize in boolean := false)
+return varchar2
+is
+l_sql varchar2(4000);
+l_value varchar2(4000);
+begin
+  -- set the string
+  l_sql := 'begin :val :='|| p_variable||'; end;';
+  -- get value
+  execute immediate l_sql using out l_value;
+  if (p_initialize) then -- the value gets pruned after
+    setval(p_variable, null);
+    dbms_output.put_line('apx.g_txt (in package): '||apx.g_txt); -- needed for testing
+  end if;
+  return l_value;
+end;
+
+
+
+------------------------------------------------------------------
+-- Printing Output Procedures for Debug and Logging
+------------------------------------------------------------------
+
+-- print_line
+PROCEDURE "PL_PRINT_LINE" (
+str_in IN VARCHAR2,
+len_in IN INTEGER := 100,
+expand_in IN BOOLEAN := TRUE)
+IS
+len PLS_INTEGER;
+str VARCHAR2(2000);
+BEGIN
+    -- set maximum chars/line
+    IF (db_version < 10) THEN
+        len  := LEAST (len_in, 255);
+    ELSE
+        len  := LEAST (len_in, 32767);
+    END IF;
+
+    IF (LENGTH (str_in) > len) THEN
+        str := SUBSTR (str_in, 1, len);
+        DBMS_OUTPUT.PUT_LINE (str);
+        --recursive call of this procedure for remaining characters
+        PL_PRINT_LINE (SUBSTR (str_in, len + 1), len, expand_in);
+    ELSE
+        str := str_in;
+        DBMS_OUTPUT.PUT_LINE (str);
+    END IF;
+EXCEPTION WHEN OTHERS THEN
+DBMS_OUTPUT.PUT_LINE ('Execption in PL');
+    IF expand_in THEN
+       DBMS_OUTPUT.ENABLE (1000000);
+    ELSE
+       RAISE;
+    END IF;
+    DBMS_OUTPUT.PUT_LINE (str);
+END;
+
+
+-- print_pretty_line
+PROCEDURE "PL_PRINT_PRETTY_LINE" (
+str_in IN VARCHAR2,
+len_in IN INTEGER := 100,
+expand_in IN BOOLEAN := TRUE)
+IS
+len PLS_INTEGER := LEAST (len_in, 255);
+str VARCHAR2(2000);
+BEGIN
+    -- set maximum chars/line
+    IF (db_version < 10) THEN
+        len  := LEAST (len_in, 255);
+    ELSE
+        len  := LEAST (len_in, 32767);
+    END IF;
+
+    IF (LENGTH (str_in) > len) THEN
+        -- increment package variable ppl_cnt first
+        ppl_cnt := ppl_cnt + 1;
+        IF (ppl_cnt = 1) THEN -- first run, so set l_len
+        -- len_in can change at runtime, so we need a constant value here.
+            ppl_len := len_in;
+        END IF;
+
+        str := SUBSTR (str_in, 1, len);
+        len := INSTR(str, ' ', -1, 1);
+        str := SUBSTR (str, 1, INSTR(str, ' ', -1, 1));
+        DBMS_OUTPUT.PUT_LINE (str);
+        --recursive call of this procedure for remaining characters
+        PL_PRINT_PRETTY_LINE (SUBSTR (str_in, len + 1), ppl_len, expand_in);
+    ELSE
+        str := str_in;
+        DBMS_OUTPUT.PUT_LINE (str);
+    END IF;
+EXCEPTION WHEN OTHERS THEN
+DBMS_OUTPUT.PUT_LINE ('Execption in PPL');
+    IF expand_in THEN
+       DBMS_OUTPUT.ENABLE (1000000);
+    ELSE
+       RAISE;
+    END IF;
+    -- PUT_LINE Exceptions are handled in ppl or pl already
+    DBMS_OUTPUT.PUT (str);
+END;
+
+-- PL/SQL Print
+PROCEDURE "PL_PRINT" (
+str_in IN VARCHAR2,
+len_in IN NUMBER DEFAULT 100,
+p_line IN BOOLEAN DEFAULT TRUE, -- use put_line ?
+c_padding IN NUMBER DEFAULT NULL, -- use c_pad?
+c_padchar IN CHAR DEFAULT '.',         -- character used for c_pad
+print_pretty IN BOOLEAN := FALSE,  -- use PrintPretty for Linebreaks
+expand_in IN BOOLEAN := TRUE)
+IS
+str VARCHAR2(2000);
+max_line PLS_INTEGER;
+BEGIN
+
+    IF (c_padding IS NOT NULL) THEN
+        str := RPAD(str_in, c_padding, c_padchar);
+    ELSE
+        str := str_in;
+    END IF;
+
+    IF (p_line) THEN
+        IF (print_pretty) THEN
+        --DBMS_OUTPUT.PUT_LINE ('Printing Pretty Line: '||str);
+            PL_PRINT_PRETTY_LINE (str, len_in);
+        ELSE
+        --DBMS_OUTPUT.PUT_LINE ('Printing Line: '||str);
+            PL_PRINT_LINE (str, len_in);
+        END IF;
+    ELSE
+        DBMS_OUTPUT.PUT(str);
+    END IF;
+EXCEPTION WHEN OTHERS THEN
+    IF expand_in THEN
+       DBMS_OUTPUT.ENABLE (1000000);
+    ELSE
+       RAISE;
+    END IF;
+    -- PUT_LINE Exceptions are handled in pl_print_pretty_line or pl already
+    DBMS_OUTPUT.PUT (str);
+END;
+
+------------------------------------------------------------------
+-- Print Text Procedures (HTP.PRN and HTP.PRINT)
+------------------------------------------------------------------
+
+-- Print without newlines (classic print command)
+PROCEDURE "HT_PRINT" (p_txt in varchar2)
+is
+  l_txt varchar2(4000);
+begin
+  l_txt := p_txt;
+  htp.prn(l_txt);
+end;
+
+PROCEDURE "HT_PRINT" (p_date in date)
+is
+  l_date date;
+begin
+  l_date := p_date;
+  htp.prn(l_date);
+end;
+
+PROCEDURE "HT_PRINT" (p_int in number)
+is
+  l_int number;
+begin
+  l_int := p_int;
+  htp.prn(l_int);
+end;
+
+-- Print with newlines (classic printn command)
+PROCEDURE "HT_PRINTN" (p_txt in varchar2)
+is
+  l_txt varchar2(4000);
+begin
+  l_txt := p_txt;
+  htp.print(l_txt);
+end;
+
+PROCEDURE "HT_PRINTN" (p_date in date)
+is
+  l_date date;
+begin
+  l_date := p_date;
+  htp.print(l_date);
+end;
+
+PROCEDURE "HT_PRINTN" (p_int in number)
+is
+  l_int number;
+begin
+  l_int := p_int;
+  htp.print(l_int);
+end;
+
+------------------------------------------------------------------
+-- Print Escaped Text Procedures (HTP.PS and HTP.PRINTS)
+------------------------------------------------------------------
+
+-- don't print newlines
+PROCEDURE "HT_PS"(p_txt in varchar2)
+is
+  l_txt varchar2(4000);
+begin
+  l_txt := p_txt;
+  htp.ps(l_txt);
+end;
+
+-- print newlines
+PROCEDURE "HT_PRINTS" (p_txt in varchar2)
+is
+  l_txt varchar2(4000);
+begin
+  l_txt := p_txt;
+  htp.prints(l_txt);
+end;
+
+------------------------------------------------------------------
+-- Admin Functions (converters mostly)
+------------------------------------------------------------------
+
+-- convert number to a boolean
+FUNCTION "NUM_TO_BOOLEAN" (
+  number_in IN NUMBER
+, false_num IN NUMBER := 0 -- which value evaluates to false?
+, operand IN VARCHAR2 := '>'
+) RETURN BOOLEAN
+IS
+retval BOOLEAN := FALSE;
+BEGIN
+    IF operand = '>' AND number_in > false_num THEN
+        retval := TRUE;
+    ELSIF operand = '=' AND number_in = false_num THEN
+        retval := FALSE;
+    ELSIF operand = '=' AND number_in != false_num THEN
+        retval := TRUE;
+    ELSIF operand = '<' AND number_in < false_num THEN
+        retval := TRUE;
+    END IF;
+RETURN retval;
+END;
+
+-- convert boolean to a number
+FUNCTION "BOOLEAN_TO_NUM" (
+  boolean_in IN BOOLEAN
+, true_num IN NUMBER := 1 -- which value is true?
+) RETURN NUMBER
+IS
+retval NUMBER := 0;
+BEGIN
+    IF boolean_in THEN
+        retval := true_num;
+    END IF;
+RETURN retval;
+END;
+
+
+------------------------------------------------------------------
+-- Initialization Section
+------------------------------------------------------------------
+BEGIN
+    l_stepname := 'INIT';
+
+    ------------------------------------------------------------------
+    -- Set Encryption key
+    ------------------------------------------------------------------
+    l_step := l_step + 1;
+    l_step_comment := 'Set Encryption key';
+    select apxkey into key_bytes_raw from dual;
+
+    ------------------------------------------------------------------
+    -- APEX Environment
+    -- (set here to see if a session exists,
+    --  else no more processing needed.)
+    ------------------------------------------------------------------
+    l_step := l_step + 1;
+    l_step_comment := 'APEX Session ID';
+    p_session_id := nvl(v('SESSION_ID'), c_discon);
+
+    if (p_session_id != c_discon or g_debug) then -- a Session exists or we debug
+
+       ------------------------------------------------------------------
+       -- APEX Settings (Workspace ID/NAME, APP_ID, APP_USER,...)
+       ------------------------------------------------------------------
+
+      -- //TODO
+
+       ------------------------------------------------------------------
+       -- get current Database- and APEX Majorversion
+       -- (set in here once to minimize depencies among packages)
+       ------------------------------------------------------------------
+      begin
+
+      l_step := l_step + 1;
+      l_step_comment := 'DB Version';
+      db_version := "APX_GET_VERSION"('CATALOG');
+
+      l_step := l_step + 1;
+      l_step_comment := 'APEX Version';
+      db_version := "APX_GET_VERSION"('APEX');
+
+      -- in here we use hard-wired logging, since apxerr might not be in place yet
+      exception when others then
+        l_str := 'ERROR: ['|| l_pkg||']:['||l_stepname|| ']:[';
+        l_str := l_str ||l_step||']: Setting '||l_step_comment||' has '||c_fld||' ***';
+        dbms_output.put_line (l_str);
+        dbms_output.put_line (sqlerrm);
+      raise;
+      end;
+
+    else
+      -- say something about usage of this package, or
+      null;
+    end if;
+
+------------------------------------------------------------------
+-- End of Initialization Section
+------------------------------------------------------------------
+
+END "APX";
+/
+
+----------------------------------------------------------------------------------------------------
+-- Display Errors if any
+------------------------------------------------------------------
+prompt
+prompt Package "APX" Errors:
+select line, text from all_errors
+where name = 'APX'
+order by line;
+prompt Done compiling Package "APX" :-)
+prompt
+----------------------------------------------------------------------------------------------------
+set define on
+
+---- if you want make it public
+-- grant execute on apx to apex_public_user;
+-- create public synonym apx for apx;
+
+--------------------------------------------------------------------------------
+-- provided interfaces
+prompt "APX" provided interfaces
+--------------------------------------------------------------------------------
+prompt
+prompt "REGISTER_LOGIN"
+create or replace procedure "REGISTER_LOGIN"
+is
+begin
+  insert into "APX$USR_SESSION" (apx_user_session_id, apx_username, app_id, app_ws_id)
+  values(v('SESSION'), v('APP_USER'), v('APP_ID'), apx.getwsid(p_app_id=>v('APP_ID')));
+end;
+/
+
+set pages 0 line 120 define off verify off feed off echo off timing off
+
+>>>>>>> origin/master
 EXIT SQL.SQLCODE;
-       ---- 17/12/13 23:49  End of SQL Build APX  ----
+
+       ---- 17/12/17 21:09  End of SQL Build APX  ----
 ---------------------------------------------------------------
