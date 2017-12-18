@@ -3442,6 +3442,7 @@ create index "APX$USRREG_CTX_FK_IDX"    on "APX$USER_REG"(apx_user_context_id);
 
 create sequence "APX$USREG_ID_SEQ" start with 100 increment by 1 nocache;
 
+
 create or replace trigger "APX$USRREG_BIU_TRG"
 before insert or update on "APX$USER_REG"
 referencing old as old new as new
@@ -3519,7 +3520,7 @@ begin
 end;
 /
 
-exit;
+
 --------------------------------------------------------------------------------------
 -- Synonyms on APX$USER_REG
 create synonym  "APEX_USER_REGISTRATION"        for "APX$USER_REG";
