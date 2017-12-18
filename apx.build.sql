@@ -6417,7 +6417,7 @@ end;
 
 set pages 0 line 120 define off verify off feed off echo off timing off
 
->>>>>>> origin/master
+
 EXIT SQL.SQLCODE;
 
        ---- 17/12/17 21:09  End of SQL Build APX  ----
