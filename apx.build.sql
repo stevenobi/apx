@@ -1,11 +1,11 @@
 
 ---------------------------------------------------------------
-       ---- 17/12/19 22:14 Begin of SQL Build APX ----
+       ---- 17/12/20 22:02 Begin of SQL Build APX ----
 
 
 -- SQL Drop File
 -- whenever oserror exit;
-whenever sqlerror exit sql.sqlcode;
+--whenever sqlerror exit sql.sqlcode;
 set pages 0 line 120 define on verify off feed off echo off
 alter session set nls_date_format='DD.MM.YYYY HH24:MI:SS';
 select sysdate || '     Dropping: "&1. Objects"' as install_message
@@ -185,6 +185,18 @@ drop view "APEX_CONFIGURATION";
 prompt APEX_STATUS
 drop view "APEX_STATUS";
 
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Snapshots and Views
+
+prompt APEX_ALL_APPLICATIONS
+drop view "APEX_ALL_APPLICATIONS";
+drop view "APEX_USER_APPLICATIONS";
+drop view "APEX_INTERNAL_APPLICATIONS";
+drop view "APEX_WORKSPACE_APPLICATIONS";
+drop view "APEX_MY_APPLICATION";
+
+drop view "APEX_WORKSPACE";
+drop view "APEX_WORKSPACE_USERS";
 
 ---------------------------------------------
 -- Procedures and Functions
@@ -566,6 +578,129 @@ values ('PUBLIC_PRIVATE_KEY', 'PPK', 2, 1, 0);
 
 commit;
 
+set define off;
+
+--------------------------------------------------------------------------------------
+-- All APEX_APPLICATIONS
+create  view "APEX_ALL_APPLICATIONS"
+as
+select a.workspace_id, a.workspace, a.application_id, a.owner, a.application_name, a.compatibility_mode,  a.home_link as home_link,
+replace(replace (a.home_link, '&APP_ID.', a.application_id), ':&SESSION.', '') as home_link_apex,
+a.login_url, a.theme_number, a.alias, a.pages, a.application_items, a.last_updated_by, a.last_updated_on,
+a.authentication_schemes, a.authentication_scheme_type, a.authorization_schemes, a.authorization_scheme
+from "APEX_APPLICATIONS" a
+order by 2, 3;
+
+
+-- all Applications that are not INTERNAL
+create  view "APEX_USER_APPLICATIONS"
+as
+select workspace_id,
+  workspace,
+  application_id,
+  owner,
+  application_name,
+  compatibility_mode,
+  home_link,
+  home_link_apex,
+  login_url,
+  theme_number,
+  alias,
+  pages,
+  application_items,
+  last_updated_by,
+  last_updated_on,
+  authentication_schemes,
+  authentication_scheme_type,
+  authorization_schemes,
+  authorization_scheme
+from "APEX_ALL_APPLICATIONS"
+where workspace != 'INTERNAL' -- all but Apex INTERNAL Applications
+order by 2, 3;
+
+
+-- all Applications that are INTERNAL
+create  view "APEX_INTERNAL_APPLICATIONS"
+as
+select workspace_id,
+  workspace,
+  application_id,
+  owner,
+  application_name,
+  compatibility_mode,
+  home_link,
+  home_link_apex,
+  login_url,
+  theme_number,
+  alias,
+  pages,
+  application_items,
+  last_updated_by,
+  last_updated_on,
+  authentication_schemes,
+  authentication_scheme_type,
+  authorization_schemes,
+  authorization_scheme
+from "APEX_ALL_APPLICATIONS"
+where workspace = 'INTERNAL' -- only Apex INTERNAL Applications
+order by 1, 3;
+
+
+-- All APEX_APPLICATIONS except INTERNAL
+create  view "APEX_WORKSPACE_APPLICATIONS"
+as
+select workspace_id, workspace, application_id, owner, application_name, compatibility_mode, home_link, home_link_apex, login_url, theme_number,
+           alias, pages, application_items, last_updated_by, last_updated_on, authentication_schemes, authentication_scheme_type, authorization_schemes,
+           authorization_scheme
+from "APEX_ALL_APPLICATIONS"
+where workspace != 'INTERNAL'
+order by 2, 3;
+
+
+-- current APEX_APPLICATION only
+create  view "APEX_MY_APPLICATION"
+as
+SELECT WORKSPACE_ID,
+  WORKSPACE,
+  APPLICATION_ID,
+  OWNER,
+  APPLICATION_NAME,
+  COMPATIBILITY_MODE,
+  HOME_LINK,
+  HOME_LINK_APEX,
+  LOGIN_URL,
+  THEME_NUMBER,
+  ALIAS,
+  PAGES,
+  APPLICATION_ITEMS,
+  LAST_UPDATED_BY,
+  LAST_UPDATED_ON,
+  AUTHENTICATION_SCHEMES,
+  AUTHENTICATION_SCHEME_TYPE,
+  AUTHORIZATION_SCHEMES,
+  AUTHORIZATION_SCHEME
+FROM "APEX_ALL_APPLICATIONS"
+WHERE APPLICATION_ID = v('APP_ID');
+
+--------------------------------------------------------------------------------------
+-- APEX Workspace
+create view "APEX_WORKSPACE"
+as
+select workspace_id, workspace, application_id, owner
+from "APEX_MY_APPLICATION";
+
+-- Workspace Users
+create view "APEX_WORKSPACE_USERS"
+as
+  select au.workspace_id, au.workspace_name, au.first_schema_provisioned,
+       au.user_name, au.first_name, au.last_name, au.email,
+       au.date_created, au.date_last_updated, au.account_expiry,
+       au.available_schemas, au.is_admin, au.is_application_developer,
+       au.failed_access_attempts, au.account_locked
+from "APEX_WORKSPACE_APEX_USERS" au join "APEX_WORKSPACE" aw
+on (au.workspace_id = aw.workspace_id);
+
+set define on;
 -----------------------------------------------------------------------------------------------------
 -- App Processes Table (Procedures,  Functions,  Authorization Items, ...)
 
@@ -4693,6 +4828,6 @@ set pages 0 line 120 define off verify off feed off echo off timing off
 
 EXIT SQL.SQLCODE;
 
-       ---- 17/12/19 22:14  End of SQL Build APX  ----
+       ---- 17/12/20 22:02  End of SQL Build APX  ----
 ---------------------------------------------------------------
 
