@@ -1,6 +1,6 @@
 
 ---------------------------------------------------------------
-       ---- 17/12/20 22:02 Begin of SQL Build APX ----
+       ---- 18/01/08 02:23 Begin of SQL Build APX ----
 
 
 -- SQL Drop File
@@ -15,6 +15,18 @@ from dual;
 prompt
 prompt Dropping DB Model (Tables)
 prompt
+
+
+-------------------------------------------------------------------------------
+-- Apex Message Management
+prompt APX$MAIL
+
+drop view        "APEX_MAIL_TOPIC_CONTENTS";
+drop synonym     "APEX_MAIL_TOPICS";
+drop synonym     "APEX_MAIL_CONTENT";
+drop trigger     "APX$MAIL_CONTENT_BIU_TRG";
+drop sequence    "APX$MAIL_CONTENT_ID_SEQ";
+drop table       "APX$MAIL_CONTENT" purge;
 
 
 -------------------------------------------------------------------------------
@@ -149,6 +161,43 @@ drop table "APX$" purge;
 prompt
 prompt Dropping Interfaces required
 
+
+prompt
+prompt APX$SEND_MAIL
+drop procedure "SEND_MAIL";
+
+prompt
+prompt APX$MAIL_ADRESS_CHECK
+drop function  "IS_VALID_EMAIL_ADDRESS_CODE";
+drop function  "IS_VALID_EMAIL_ADDRESS";
+drop function  "IS_VALID_EMAIL";
+drop procedure "CHECK_EMAIL_ADDRESS";
+
+prompt
+prompt APX$SMTP_MAIL_STATUS
+drop function  "GET_EMAIL_STATUS_FORMATTED";
+drop function  "GET_RESULT_TEXT";
+drop function  "GET_EMAIL_STATUS_TEXT";
+drop function  "GET_SMTP_REPLY_TEXT";
+
+prompt
+prompt APX$EMAIL_BODY_HTML_SUBJET
+drop function  "GET_EMAIL_BODY_HTML";
+drop function  "GET_EMAIL_BODY";
+drop function  "GET_EMAIL_SUBJECT";
+drop function  "GET_EMAIL_CONTENT";
+drop procedure "SET_EMAIL_CONTENT";
+
+prompt
+prompt APX$PARSE_NAME_FROM_EMAIL
+drop function  "PARSE_DOMAIN_FROM_EMAIL";
+drop function  "PARSE_USERNAME_FROM_EMAIL";
+
+prompt
+prompt APX$URL
+drop function  "GET_URL";
+drop procedure "SET_URL";
+
 prompt
 prompt APX$KEY
 drop function "APXKEY";
@@ -181,9 +230,13 @@ drop view  "APEX_CONTEXT";
 prompt APEX_CONFIG
 drop view "APEX_CONFIG_CONTEXT";
 drop view "APEX_CONFIGURATION";
+drop view "APEX_USERNAME_FORMAT";
 
 prompt APEX_STATUS
 drop view "APEX_STATUS";
+drop view "APEX_ACCOUNT_STATUS";
+drop view "APEX_APPLICATION_STATUS";
+
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Snapshots and Views
@@ -739,6 +792,7 @@ constraint "APX$CTX_SUBCONTEXT_FK" foreign key (apx_sub_context_id) references "
 
 create unique index "APX$CTX_UNQ1" on "APX$CTX"(apx_context_id, app_id);
 create unique index "APX$CTX_UNQ2" on "APX$CTX"(upper(apx_context),  upper(apx_context_code), app_id);
+create index "APX$CTX_CONTEXT_IDX" on "APX$CTX"(apx_context);
 create index "APX$CTX_TYPE_FK" on "APX$CTX" (apx_context_type_id);
 create index "APX$CTX_SUBTYPE_FK" on "APX$CTX" (apx_context_subtype_id);
 create index "APX$CTX_SUBCONTEXT_FK" on "APX$CTX" (apx_sub_context_id);
@@ -931,7 +985,7 @@ apx_status_code varchar2(8),
 apx_status_ctx_id number,
 apx_parent_status_id number,
 apx_status_sec_level number default 0,
-apx_id number,
+app_id number,
 created date,
 created_by varchar2(64),
 modified date,
@@ -941,10 +995,10 @@ constraint "APX$STATUS_PARENT_FK" foreign key (apx_parent_status_id) references 
 constraint "APX$STATUS_CTX_FK" foreign key (apx_status_ctx_id) references "APX$CTX"(apx_context_id)
 );
 
-create unique index "APX$STATUS_UNQ1" on "APX$STATUS"(apx_status_id, apx_id);
-create unique index "APX$STATUS_UNQ2" on "APX$STATUS"(upper(apx_status), apx_status_ctx_id, apx_id);
+create unique index "APX$STATUS_UNQ1" on "APX$STATUS"(apx_status_id, app_id);
+create unique index "APX$STATUS_UNQ2" on "APX$STATUS"(upper(apx_status), apx_status_ctx_id, app_id);
 create index "APX$STATUS_CODE_IDX" on "APX$STATUS"(apx_status_code, apx_status);
-create index "APX$STATUS_apx_ID_IDX" on "APX$STATUS"(apx_id);
+create index "APX$STATUS_CTX_IDX" on "APX$STATUS"(apx_status_ctx_id);
 
 create sequence "APX$STATUS_ID_SEQ" start with 1 increment by 1 nocache;
 
@@ -986,10 +1040,58 @@ as
           (select b.apx_status from "APEX_SYS_STATUS" b
            where b.apx_status_id = s.apx_parent_status_id) as apex_parent_status,
            s.apx_status_sec_level as apex_status_security_level,
-           s.apx_id as app_id
+           s.app_id as app_id,
+           s.modified,
+           s.modified_by,
+           s.created,
+           s.created_by
 from  "APEX_SYS_STATUS" s
 left outer join "APEX_CONTEXT" ctx
 on (s.apx_status_ctx_id = ctx.apex_context_id)
+order by 1;
+
+
+-- User and Roles
+create  view "APEX_ACCOUNT_STATUS"
+as
+select
+apex_status_id,
+apex_status,
+apex_status_code,
+apex_status_context_id,
+apex_status_context,
+apex_parent_status_id,
+apex_parent_status,
+apex_status_security_level,
+app_id,
+modified,
+modified_by,
+created,
+created_by
+from  "APEX_STATUS"
+where apex_status_context = 'ACCOUNT'
+order by 1;
+
+
+-- Application
+create  view "APEX_APPLICATION_STATUS"
+as
+select
+apex_status_id,
+apex_status,
+apex_status_code,
+apex_status_context_id,
+apex_status_context,
+apex_parent_status_id,
+apex_parent_status,
+apex_status_security_level,
+app_id,
+modified,
+modified_by,
+created,
+created_by
+from  "APEX_STATUS"
+where apex_status_context = 'ACCOUNT'
 order by 1;
 
 
@@ -997,39 +1099,45 @@ order by 1;
 -- Status Data
 
 -- DEFAULT Status first
-insert into "APX$STATUS" (apx_status_id, apx_status, apx_status_code, apx_status_ctx_id, apx_id)
+insert into "APX$STATUS" (apx_status_id, apx_status, apx_status_code, apx_status_ctx_id, app_id)
 values ('0', 'DEFAULT', 'DEF', (select apx_context_id from "APX$CTX" WHERE apx_context = 'DEFAULT'), V('FB_FLOW_ID'));
 -- Status by Context
-insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
+insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, app_id)
 values ('ON', 'ON', (select apx_context_id from "APX$CTX" WHERE apx_context = 'SETTING'), v('FB_FLOW_ID'));
-insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
+insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, app_id)
 values ('OFF', 'OFF', (select apx_context_id from "APX$CTX" WHERE apx_context = 'SETTING'), V('FB_FLOW_ID'));
-insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
+insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, app_id)
 values ('ENABLED', 'ENA', (select apx_context_id from "APX$CTX" WHERE apx_context = 'APPLICATION'), v('FB_FLOW_ID'));
-insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
+insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, app_id)
 values ('DISABLED', 'DIS', (select apx_context_id from "APX$CTX" WHERE apx_context = 'APPLICATION'), V('FB_FLOW_ID'));
-insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
+insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, app_id)
+values ('INVALID', 'INVAL', (select apx_context_id from "APX$CTX" where apx_context = 'DOMAIN'), V('FB_FLOW_ID'));
+insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, app_id)
+values ('VALID', 'VAL', (select apx_context_id from "APX$CTX" where apx_context = 'DOMAIN'), V('FB_FLOW_ID'));
+insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, app_id)
 values ('OPEN', 'OPN', (select apx_context_id from "APX$CTX" where apx_context = 'ACCOUNT'), v('FB_FLOW_ID'));
-insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
+insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, app_id)
 values ('LOCKED', 'LCK', (select apx_context_id from "APX$CTX" WHERE apx_context = 'ACCOUNT'), V('FB_FLOW_ID'));
-insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
+insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, app_id)
 values ('EXPIRED', 'XPR', (select apx_context_id from "APX$CTX" WHERE apx_context = 'ACCOUNT'), v('FB_FLOW_ID'));
-insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
+insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, app_id)
 values ('SUSPENDED', 'SUS', (select apx_context_id from "APX$CTX" WHERE apx_context = 'ACCOUNT'), V('FB_FLOW_ID'));
-insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
+insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, app_id)
 values ('UP', 'UP', (select apx_context_id from "APX$CTX" WHERE apx_context = 'APPLICATION'), V('FB_FLOW_ID'));
-insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
+insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, app_id)
 values ('DOWN', 'DWN', (select apx_context_id from "APX$CTX" where apx_context = 'APPLICATION'), V('FB_FLOW_ID'));
-insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
+insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, app_id)
 values ('NEW', 'NEW', (select apx_context_id from "APX$CTX" WHERE apx_context = 'USER'), v('FB_FLOW_ID'));
-insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
+insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, app_id)
 values ('REGISTERED', 'REG', (select apx_context_id from "APX$CTX" where apx_context = 'USER'), V('FB_FLOW_ID'));
-insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
+insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, app_id)
 values ('VERIFIED', 'VER', (select apx_context_id from "APX$CTX" WHERE apx_context = 'USER'), v('FB_FLOW_ID'));
-insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
-values ('VALIDATED', 'VALI', (select apx_context_id from "APX$CTX" where apx_context = 'USER'), V('FB_FLOW_ID'));
-insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, apx_id)
+insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, app_id)
+values ('CREATED', 'CRE', (select apx_context_id from "APX$CTX" where apx_context = 'USER'), V('FB_FLOW_ID'));
+insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, app_id)
 values ('VALID', 'VAL', (select apx_context_id from "APX$CTX" where apx_context = 'USER'), V('FB_FLOW_ID'));
+insert into "APX$STATUS" (apx_status, apx_status_code, apx_status_ctx_id, app_id)
+values ('REG_ATTEMPTS_EXCEEDED', 'EXCEED', (select apx_context_id from "APX$CTX" where apx_context = 'USER'), V('FB_FLOW_ID'));
 
 commit;
 
@@ -1277,6 +1385,8 @@ constraint "APX$CFG_SUB_CTX_FK" foreign key (apx_config_sub_ctx_id) references "
 
 create unique index "APX$CFG_UNQ1" on "APX$CFG"(apx_config_id,  app_id);
 create unique index "APX$CFG_UNQ2" on "APX$CFG"(upper(apx_config_name),  apx_config_ctx_id,  app_id);
+create index "APX$CFG_ITEM_IDX" on "APX$CFG" (apx_config_name);
+create index "APX$CFG_ITEM_VAL_IDX" on "APX$CFG" (apx_config_name, nvl(apx_config_value, apx_config_def_value));
 create index "APX$CFG_STAT" on "APX$CFG"(apx_config_status_id);
 create index "APX$CFG_CONTEXT" on "APX$CFG"(apx_config_ctx_id);
 
@@ -1339,6 +1449,13 @@ on (cfg.apx_config_ctx_id = ctx.apx_context_id)
 left outer join "APEX_SYS_CONTEXT" subctx
 on (cfg.apx_config_sub_ctx_id = subctx.apx_context_id);
 
+--------------------------------------------------------------------------------------
+-- All APEX Application Username format
+create view "APEX_USERNAME_FORMAT"
+as
+select apex_config_item_value as username_format
+from "APEX_CONFIGURATION"
+where apex_config_item = 'USERNAME_FORMAT';
 
 -------------------------------------------------------------------------------
 -- INSERTING into APX$CFG
@@ -1395,6 +1512,8 @@ insert into "APX$CFG" (apx_config_name, apx_config_value, apx_config_def_value, 
 values ('USER_REGISTRATION_ATTEMPTS', null, '3', 3, 10, 2, 'Apex User Registration Attempts before redirected to Homepage', 13, null);
 insert into "APX$CFG" (apx_config_name, apx_config_value, apx_config_def_value, apx_config_status_id, apx_config_ctx_id, apx_config_sub_ctx_id, apx_config_comment, apx_parent_config_id, app_id)
 values ('USER_TOKEN_FUNCTION', null, 'APX_GET_TOKEN', 3, 10, 2, 'Apex User Registration Token Function or Procedure', 13, null);
+insert into "APX$CFG" (apx_config_name, apx_config_value, apx_config_def_value, apx_config_status_id, apx_config_ctx_id, apx_config_sub_ctx_id, apx_config_comment, apx_parent_config_id, app_id)
+values ('ENFORCE_VALID_DOMAIN', null, 'FALSE', 3, 10, 2, 'Apex User Registration demands a valid Domain (Lookup to APEX_VALID_DOMAINS)', 13, null);
 
 commit;
 
@@ -3132,6 +3251,8 @@ from  "APX$USR_SESSION"
 );
 
 
+
+
 -----------------------------------------------------------------------------------------------------
 -- App Processes Table (Procedures, Functions, Authorization Items,...)
 
@@ -3524,6 +3645,2279 @@ commit;
 
 
 
+--- APEX Mail Message Management ---
+
+-----------------------------------------------------------------------------------------------------
+--
+-- Stefan Obermeyer 12.2016
+--
+-- 07.01.2017 SOB created
+--
+--
+-----------------------------------------------------------------------------------------------------
+
+-- @requires APX$ Model (Status, Context, ...)
+
+
+--------------------------------------------------------------------------------
+-- APEX Email Messaging,...
+--------------------------------------------------------------------------------
+
+-- -- Apex Mail Tables and Views
+
+-- -- -- drop first
+
+-- ---- Interfaces
+-- drop procedure   "SEND_MAIL";
+
+-- drop function    "IS_VALID_EMAIL_ADDRESS_CODE";
+-- drop function    "IS_VALID_EMAIL_ADDRESS";
+-- drop function    "IS_VALID_EMAIL";
+-- drop procedure   "CHECK_EMAIL_ADDRESS";
+
+-- drop function    "GET_EMAIL_STATUS_FORMATTED";
+-- drop function    "GET_RESULT_TEXT";
+-- drop function    "GET_EMAIL_STATUS_TEXT";
+-- drop function    "GET_SMTP_REPLY_TEXT";
+
+-- drop function    "GET_EMAIL_BODY_HTML";
+-- drop function    "GET_EMAIL_BODY";
+-- drop function    "GET_EMAIL_SUBJECT";
+-- drop function    "GET_EMAIL_CONTENT";
+-- drop procedure   "SET_EMAIL_CONTENT";
+
+-- drop procedure   "SET_URL";
+-- drop function    "GET_URL";
+
+-- drop function    "PARSE_DOMAIN_FROM_EMAIL";
+-- drop function    "PARSE_USERNAME_FROM_EMAIL";
+
+-- -- Objects
+-- drop view        "APEX_MAIL_TOPIC_CONTENTS";
+-- drop synonym     "APEX_MAIL_TOPICS";
+-- drop synonym     "APEX_MAIL_CONTENT";
+-- drop trigger     "APX$MAIL_CONTENT_BIU_TRG";
+-- drop sequence    "APX$MAIL_CONTENT_ID_SEQ";
+-- drop table       "APX$MAIL_CONTENT"          purge;
+
+--------------------------------------------------------------------------------------
+-- Application Mails
+create table "APX$MAIL_CONTENT" (
+apx_mail_id            number       not null,
+apx_mail_topic         varchar2(64) not null,
+apx_mail_subject       varchar2(1000),
+apx_mail_body          clob,
+apx_mail_body_html     clob,
+apx_mail_head          clob,
+apx_mail_body_content  clob,
+apx_mail_tail          clob,
+apx_mail_to            clob,
+apx_mail_to_user       clob,
+apx_mail_greeting      clob,
+apx_img_url1           clob,
+apx_img_url1_alt       clob,
+apx_text1              clob,
+apx_text2              clob,
+apx_url_params         clob,
+apx_url_values         clob,
+apx_url_query          clob,
+apx_parent_mail_id     number,
+apx_app_page           varchar2(1000),
+apx_app_request        varchar2(1000),
+apx_mail_sec_level     number default 0,
+apx_mail_status_id     number default 0,
+app_id                 number default null,
+created date,
+created_by varchar2(64),
+modified date,
+modified_by varchar2(64),
+constraint "APX$MAIL_CONTENT_MAIL_ID" primary key (apx_mail_id),
+constraint "APX$MAIL_CONTENT_STATUS_FK" foreign key (apx_mail_status_id) references "APX$STATUS"(apx_status_id) on delete set null,
+constraint "APX$MAIL_CONTENT_PARENT_FK" foreign key (apx_parent_mail_id) references "APX$MAIL_CONTENT"(apx_mail_id) on delete set null
+);
+
+create unique index "APX$MAIL_CONTENT_UNQ1"   on "APX$MAIL_CONTENT"(upper(trim(apx_mail_topic)), app_id);
+create index "APX$MAIL_CONTENT_TOPIC"         on "APX$MAIL_CONTENT"(apx_mail_topic);
+create index "APX$MAIL_CONTENT_STATUS_FK_IDX" on "APX$MAIL_CONTENT"(apx_mail_status_id);
+create index "APX$MAIL_CONTENT_PARENT_FK_IDX" on "APX$MAIL_CONTENT"(apx_parent_mail_id);
+create index "APX$MAIL_CONTENT_SECLEV"        on "APX$MAIL_CONTENT"(apx_mail_sec_level);
+create index "APX$MAIL_CONTENT_APX_ID"        on "APX$MAIL_CONTENT"(app_id);
+
+create sequence "APX$MAIL_CONTENT_ID_SEQ" start with 1 increment by 1 nocache;
+
+create or replace trigger "APX$MAIL_CONTENT_BIU_TRG"
+before insert or update on "APX$MAIL_CONTENT"
+referencing old as old new as new
+for each row
+begin
+  if inserting then
+    if (:new.apx_mail_id is null) then
+        select "APX$MAIL_CONTENT_ID_SEQ".NEXTVAL
+        into :new.apx_mail_id
+        from dual;
+    end if;
+    if (:new.app_id is null) then
+        select nvl2(v('FB_FLOW_ID'), v('FB_FLOW_ID'), v('APP_ID'))
+        into :new.app_id
+        from dual;
+    end if;
+    select sysdate, nvl(v('APX_USER'), user)
+    into :new.created, :new.created_by
+    from dual;
+  elsif updating then
+    select sysdate, nvl(v('APX_USER'), user)
+    into :new.modified, :new.modified_by
+    from dual;
+  end if;
+end;
+/
+
+
+--------------------------------------------------------------------------------------
+-- Synonyms on APX$MAIL_CONTENT
+create synonym  "APEX_MAIL_TOPICS"    for "APX$MAIL_CONTENT";
+create synonym  "APEX_MAIL_CONTENT"   for "APX$MAIL_CONTENT";
+
+
+--------------------------------------------------------------------------------------
+-- Test Content on APEX_MAIL_TOPICS
+insert into "APEX_MAIL_TOPICS" (apx_mail_id, apx_mail_topic, apx_mail_subject,
+                                apx_mail_body,
+                                apx_mail_body_html,
+                                apx_mail_head,
+                                apx_mail_body_content,
+                                apx_mail_tail,
+                                apx_mail_to,
+                                apx_mail_greeting,
+                                apx_img_url1,
+                                apx_img_url1_alt,
+                                apx_app_page,
+                                apx_app_request, apx_mail_sec_level, apx_mail_status_id, app_id)
+values ('0', 'DEFAULT', 'Apex Welcome Testmail',
+        'To view the content of this message, please use an HTML enabled mail client.',
+'<html>
+  <body>
+    ##MAIL_BODY_CONTENT##
+  </body>
+</html>',
+'<h2>##GREETING## ##MAIL_TO##</h2>',
+'<p>
+This is a Testmail from our System.<br />
+You can safely ignore this message.
+</p>',
+'<p>
+  Sincerely,<br /><br />
+    Yo Bro from Next Do''<br />
+  <img src="##IMG_URL1##" alt="##IMG_URL1_ALT">
+</p>',
+null,    -- mailto will only be replaced in mail_head if not null
+'Hello', -- Greeting
+'http://zapt1.staticworld.net/images/article/2013/04/oracle-logo-100033308-gallery.png',
+'Oracle Logo',
+'HOME',
+'WELCOME', 0, 0, 0);
+
+insert into "APEX_MAIL_TOPICS" (apx_mail_topic, apx_mail_subject, apx_mail_body_content, apx_app_page, apx_app_request, apx_mail_sec_level, apx_mail_status_id, app_id)
+values ('HOME',
+        'Welcome to our Website',
+'<p>
+  Here You find everything to make your way around our site...
+</p>',
+        null, -- use Default
+        null,
+        0, 0, 0);
+
+insert into "APEX_MAIL_TOPICS" (apx_mail_topic, apx_mail_subject, apx_mail_body_content, apx_app_page, apx_app_request, apx_mail_sec_level, apx_mail_status_id, app_id)
+values ('LOCK',
+        'Account locked!',
+'<p>Your Account was locked!<br />
+  Please reset your password to unlock Your account at our
+  <a href="##APX_APP_PAGE##">Passwod Reset</a> page.
+</p>',
+          'RESETPW',
+          'LOCKED',
+          0, 0, 0);
+
+
+insert into "APEX_MAIL_TOPICS" (apx_mail_topic, apx_mail_subject, apx_mail_body_content, apx_app_page, apx_app_request, apx_mail_sec_level, apx_mail_status_id, app_id)
+values ('UNLOCK',
+        'Account unlocked!',
+'<p>Your Account was successfully unlocked.<br />
+  Please reset your password on first use at our
+  <a href="##APX_APP_PAGE##">Passwod Reset</a> page.
+</p>',
+          'RESETPW',
+          'RESETPW',
+           0, 0 ,0);
+
+
+insert into "APEX_MAIL_TOPICS" (apx_mail_topic, apx_mail_subject, apx_mail_body_content, apx_app_page, apx_app_request, apx_mail_sec_level, apx_mail_status_id, app_id)
+values ('REGISTER',
+        'Registration Confirmation.',
+'<p>
+  Please confirm your registration at <a href="##APX_APP_PAGE##">Registration Confirmation</a> page.
+</p>',
+        'USRREG',
+        'REGISTER',
+        0, 0 ,0);
+
+
+insert into "APEX_MAIL_TOPICS" (apx_mail_topic, apx_mail_subject, apx_mail_body_content, apx_app_page, apx_app_request, apx_mail_sec_level, apx_mail_status_id, app_id)
+values ('REREGISTER',
+        'Registration Confirmation.',
+'<p>
+  Thank You for registering again.<br />
+  Please confirm your registration at <a href="##APX_APP_PAGE##">Registration Confirmation</a> page.
+</p>',
+        'USRREG',
+        'REGISTER',
+        0, 0 ,0);
+
+
+insert into "APEX_MAIL_TOPICS" (apx_mail_topic, apx_mail_subject, apx_mail_body_content, apx_app_page, apx_app_request, apx_mail_sec_level, apx_mail_status_id, app_id)
+values ('DEREGISTER',
+        'Deregistration Confirmation.',
+'<p>
+  We are sorry to see You go...
+</p>',
+        'USRDEREG',
+        'DEREGISTER',
+        0, 0 ,0);
+
+
+insert into "APEX_MAIL_TOPICS" (apx_mail_topic, apx_mail_subject, apx_mail_body_content, apx_app_page, apx_app_request, apx_mail_sec_level, apx_mail_status_id, app_id)
+values ('RESET_PW',
+        'Reset Password Information.',
+'<p>
+  You receive this mail in return to Your Pasword Reset Request.<br />
+  Please reset your password at our <a href="##APX_APP_PAGE##">Passwod Reset</a> page.
+</p>',
+        'RESETPW',
+        'RESETPW',
+        0, 0 ,0);
+
+
+insert into "APEX_MAIL_TOPICS" (apx_mail_topic, apx_mail_subject, apx_mail_body_content, apx_app_page, apx_app_request, apx_mail_sec_level, apx_mail_status_id, app_id)
+ values ('RESET_REG_ATTEMPTS',
+         'Registration Confirmation.',
+'<p>
+  Your Account was reset for registering again.<br />
+  Please confirm your registration at <a href="##APX_APP_PAGE##">Registration Confirmation</a> page.
+</p>',
+        'USRREG',
+        'REGISTER',
+        0, 0 ,0);
+
+
+insert into "APEX_MAIL_TOPICS" (apx_mail_topic, apx_mail_subject, apx_mail_body_content, apx_app_page, apx_app_request, apx_mail_sec_level, apx_mail_status_id, app_id)
+values ('REG_ATTEMPTS_EXCEEDED',
+        'Registration Attempts exceeded.',
+'<p>
+  Your Registration was invalidated, because you exceeded maximum registration attempts.<br />
+  Please contact our <a href="##APX_APP_PAGE##">Customer Support</a> page for further information.
+</p>',
+        'SUPPORT',
+        'LOCKEDOUT',
+        0, 0 ,0);
+
+commit;
+
+
+------------------------------------------------------------------------------------------------------
+-- Set Apex URL
+create procedure "SET_URL" (
+      p_url         in out     clob
+    , p_topic       in         varchar2    := null
+    , p_app         in         varchar2    := null
+    , p_page        in         varchar2    := null
+    , p_session     in         varchar2    := null
+    , p_request     in         varchar2    := null
+    , p_debug       in         varchar2    := null
+    , p_clearcache  in         varchar2    := null
+    , p_params      in         varchar2    := null
+    , p_values      in         varchar2    := null
+    , p_printerf    in         varchar2    := null
+    , p_query       in         varchar2    := null
+    , p_no_to_null  in         boolean     := false
+ )
+is
+    ------------------------------------------------------------------------------------------------------
+    -- Apex URL Format (see also: https://docs.oracle.com/cd/E14373_01/appdev.32/e11838/concept.htm#HTMDB03020)
+    -- http[s]://host:port/f?p={APP_ID}:{PAGE}:{SESSION}:{REQUEST}:{DEBUG}:{CLEARCACHE}:{PARAMS}:{VALUES}:{PRINTER_FRIENDLY}{?QUERY}
+
+    l_url                    clob;
+    l_url_prefix             varchar2(32);
+    l_topic                  varchar2(64);   -- when used inside APXUSR context (see code for values)
+    l_app                    varchar2(64);
+    l_page                   varchar2(64);
+    l_session                varchar2(64);
+    l_request                varchar2(1000);
+    l_debug                  varchar2(64);
+    l_clearcache             varchar2(1000); -- RP = ResetPagination, APP = All Pages for current app, SESSION = Same as APP just with all items in current session, 1,2,3,..comma separated PAGE_ID list to clear cache on.
+    l_params                 varchar2(4000); -- Comma-delimited list of item names used to set session state with a URL. (f.e.'USR,TOKEN').
+    l_values                 varchar2(4000); -- List of item values used to set session state within a URL. Item values cannot include colons, but can contain commas.
+    l_printerf               varchar2(64);   -- If PrinterFriendly is set to Yes, the page is being rendered in printer friendly mode.
+    l_query                  varchar2(4000); -- ? URL query string (optional and used with RESTful Requests or APP Alias Requests wher Workspace is specified by the &c argument).
+    l_rowcnt                 pls_integer := 0;
+
+    -- Constants
+    D                        constant varchar2(1)    := ':';    -- URL Delimiter
+    APX_U                    constant varchar2(4)    := 'f?p='; -- Apex URL Prefix
+    C_APP_ID                 constant pls_integer    := 100;    -- default App ID
+    C_APP_PAGE_ID            constant pls_integer    := 1;      -- default Page ID (1 = usually Home)
+    -- If the pages within an application are public and do not require authentication,
+    -- you make it easier for application users to bookmark pages by using zero as the session ID.
+    C_APP_SESSION            constant pls_integer    := 0;
+    -- Page Aliases for Topic Pages (You need to set these aliases in your Apex Application)
+    C_HOME_PAGE              constant varchar2(64)   := 'HOME';
+    C_ERROR_PAGE             constant varchar2(64)   := 'ERR';
+    C_BRANCH_PAGE            constant varchar2(64)   := 'NAV';
+    -- Custom App Pages
+    C_RESETPW_PAGE           constant varchar2(64)   := 'RESETPW';
+    C_CONFIRM_PAGE           constant varchar2(64)   := 'CONFIRM';
+    C_SUPPORT_PAGE           constant varchar2(64)   := 'SUPPORT';
+    C_REGISTER_PAGE          constant varchar2(64)   := 'USRREG';
+    C_CONFIRM_REGISTER_PAGE  constant varchar2(64)   := 'USRREGC';
+    C_DEREGISTER_PAGE        constant varchar2(64)   := 'USRDEREG';
+    C_ACCOUNT_LOCKED_PAGE    constant varchar2(64)   := 'USRLOCKED';
+    C_ACCOUNT_UNLOCKED_PAGE  constant varchar2(64)   := 'USRUNLOCKED';
+    C_ACCOUNT_REG_RESET_PAGE constant varchar2(64)   := 'RESETUSR';
+    -- Defauts
+    C_TOPIC                  constant varchar2(64)   := 'HOME';
+    C_APP                    constant varchar2(64)   := '100';
+    C_PAGE                   constant varchar2(64)   := '1';
+    C_SESSION                constant varchar2(64)   := '0';
+    C_REQUEST                constant varchar2(1000) := null;
+    C_DEBUG                  constant varchar2(64)   := null;
+    C_CLEARCACHE             constant varchar2(1000) := null;
+    C_PARAMS                 constant varchar2(4000) := null;
+    C_VALUES                 constant varchar2(4000) := null;
+    C_PRINTERF               constant varchar2(64)   := null;
+    C_QUERY                  constant varchar2(4000) := null;
+
+begin
+
+    -- Process Inputs and Defaults
+    l_url_prefix             := apex_mail.get_instance_url || APX_U;
+    l_topic                  := nvl(upper(trim(p_topic))        , C_TOPIC);
+    l_app                    := nvl(p_app                       , nvl(v('APP_ID')      , C_APP_ID));
+    l_page                   := nvl(p_page                      , nvl(v('APP_PAGE_ID') , C_APP_PAGE_ID));
+    l_session                := nvl(p_session                   , nvl(v('APP_SESSION') , C_APP_SESSION));
+    l_request                := nvl(p_request                   , nvl(v('REQUEST')     , C_REQUEST));
+    l_clearcache             := nvl(upper(trim(p_clearcache))   , C_CLEARCACHE);
+    l_params                 := nvl(p_params                    , C_PARAMS);
+    l_values                 := nvl(p_values                    , C_VALUES);
+    l_query                  := nvl(p_query                     , C_QUERY);
+    l_debug                  := nvl(upper(trim(p_debug))        , case  when (v('DEBUG') = 'NO' and p_no_to_null)
+                                                                        then null
+                                                                        else nvl(v('DEBUG'), C_DEBUG)
+                                                                  end);
+    l_printerf               := nvl(p_printerf                  , case  when (v('PRINTER_FRIENDLY') = 'NO' and p_no_to_null)
+                                                                        then null
+                                                                        else nvl(v('PRINTER_FRIENDLY'), C_PRINTERF)
+                                                                  end);
+
+    -- check if a URL string shall be just formatted or returned with defaults
+    if (p_url is not null) then
+        if (lower(substr(trim(p_url), 1, 4)) != 'http') then
+            -- we assume an incomplete url string and prepend the apex url prefix
+            l_url :=  l_url_prefix || p_url;
+        else
+            l_url := p_url;
+        end if;
+    else
+        -- get values from table
+        for t in (select app_id,
+                         apx_app_page,
+                         apx_app_request
+                  from "APEX_MAIL_TOPICS"
+                  where upper(trim(apx_mail_topic)) = l_topic)
+        loop
+            l_app       := nvl(t.app_id           , nvl(v('APP_ID'), C_APP_ID));
+            l_page      := nvl(t.apx_app_page     , C_HOME_PAGE);
+            l_request   := nvl(t.apx_app_request  , 'WELCOME');
+            l_rowcnt    := l_rowcnt + 1;
+        end loop;
+
+        -- nothing found, so error out
+        if (l_rowcnt = 0) then
+            -- return error page
+            l_page      := nvl(p_page, C_ERROR_PAGE);
+            l_request   := nvl(p_request, 'INVALID_TOPIC_'||l_topic);
+        end if;
+
+        -- now set URL String
+        l_url := to_clob(l_url_prefix||l_app||D||l_page||D||l_session||D||l_request||D||l_debug||D||l_clearcache||D||l_params||D||l_values||D||l_printerf||l_query);
+
+    end if;
+
+    -- Set Output String
+    p_url := l_url;
+
+exception when others then
+    p_url := SQLERRM;
+end "SET_URL";
+/
+
+
+------------------------------------------------------------------------------------------------------
+-- -- Test Call to Set Apex URL
+-- declare
+-- l_url    clob;
+-- l_topic  clob := 'REGISTER';
+-- l_params clob := 'USR,TOKEN';
+-- l_values clob := 'User@Domain.net,NTA2Mjc3ODJ0LW9ubGluZS5kZTEzNDAyNTY1MDI=';
+-- begin
+--   "SET_URL"(l_url, l_topic, p_params => l_params, p_values => l_values);
+--   dbms_output.put_line('URL: '|| l_url);
+-- end;
+-- /
+
+
+------------------------------------------------------------------------------------------------------
+-- Get Apex URL for Mail Content (overwrites APX$URL if present)
+create function "GET_URL" (
+      p_topic       in         varchar2    := null
+    , p_app         in         varchar2    := null
+    , p_page        in         varchar2    := null
+    , p_session     in         varchar2    := null
+    , p_request     in         varchar2    := null
+    , p_debug       in         varchar2    := null
+    , p_clearcache  in         varchar2    := null
+    , p_params      in         varchar2    := null
+    , p_values      in         varchar2    := null
+    , p_printerf    in         varchar2    := null
+    , p_query       in         varchar2    := null
+    , p_url         in         clob        := null
+    , p_no_to_null  in         pls_integer := 0
+ ) return clob
+is
+    ------------------------------------------------------------------------------------------------------
+    -- Apex URL Format (see also: https://docs.oracle.com/cd/E14373_01/appdev.32/e11838/concept.htm#HTMDB03020)
+    -- http[s]://host:port/f?p={APP_ID}:{PAGE}:{SESSION}:{REQUEST}:{DEBUG}:{CLEARCACHE}:{PARAMS}:{VALUES}:{PRINTER_FRIENDLY}{?QUERY}
+
+    l_url                    clob;
+
+    l_topic                  varchar2(64);     -- when used inside APXUSR context (see code for values)
+    l_app                    varchar2(64);
+    l_page                   varchar2(64);
+    l_session                varchar2(64);
+    l_request                varchar2(1000);
+    l_debug                  varchar2(64);
+    l_clearcache             varchar2(1000);   -- RP = ResetPagination, APP = All Pages for current app, SESSION = Same as APP just with all items in current session, 1,2,3,..comma separated PAGE_ID list to clear cache on.
+    l_params                 varchar2(4000);   -- Comma-delimited list of item names used to set session state with a URL. (f.e.'USR,TOKEN').
+    l_values                 varchar2(4000);   -- List of item values used to set session state within a URL. Item values cannot include colons, but can contain commas.
+    l_printerf               varchar2(64);     -- If PrinterFriendly is set to Yes, the page is being rendered in printer friendly mode.
+    l_query                  varchar2(4000);   -- ? URL query string (optional and used with RESTful Requests or APP Alias Requests wher Workspace is specified by the &c argument f.e:: f?p=common_alias:home:&APP_SESSION.&c=WORKSPACE_A).
+    l_no_to_null             boolean;
+
+    -- constants
+    C_NO_TO_NULL             constant boolean  := false; -- if true, NO values get pruned
+
+begin
+
+    l_topic                  := p_topic;
+    l_app                    := p_app;
+    l_page                   := p_page;
+    l_session                := p_session;
+    l_request                := p_request;
+    l_debug                  := p_debug;
+    l_clearcache             := p_clearcache;
+    l_params                 := p_params;
+    l_values                 := p_values;
+    l_printerf               := p_printerf;
+    l_query                  := p_query;
+    -- converting number to boolean
+    if (p_no_to_null = 0) then
+        l_no_to_null := false;
+    elsif (p_no_to_null = 1) then
+        l_no_to_null := true;
+    else
+        l_no_to_null := C_NO_TO_NULL;
+    end if;
+
+    -- a url string was passed, so use this for further processing
+    if (p_url is not null) then
+        l_url := p_url;
+    end if;
+
+    -- set the URL return string based on inputs
+    "SET_URL"(
+          p_url              => l_url
+        , p_topic            => l_topic
+        , p_app              => l_app
+        , p_page             => l_page
+        , p_session          => l_session
+        , p_request          => l_request
+        , p_debug            => l_debug
+        , p_clearcache       => l_clearcache
+        , p_params           => l_params
+        , p_values           => l_values
+        , p_printerf         => l_printerf
+        , p_query            => l_query
+        , p_no_to_null       => l_no_to_null
+    );
+
+    return l_url;
+
+exception when others then
+    l_url := SQLERRM;
+    return (l_url);
+end "GET_URL";
+/
+
+------------------------------------------------------------------------------------------------------
+-- -- Test Calls to Get Apex URL
+-- select "GET_URL" as apex_url
+-- from dual;                -- https://ol7:8443/ords/f?p=100:HOME:0:WELCOME:NO::::
+
+-- select "GET_URL"('REGISTER') as apex_url
+-- from dual;                -- https://ol7:8443/ords/f?p=100:USRREG:0:REGISTER:NO::::
+
+-- select "GET_URL"('REGISTERi') as apex_url
+-- from dual;                -- https://ol7:8443/ords/f?p=100:ERR:0:INVALID_TOPIC_REGISTERI:NO::::NO
+
+-- select "GET_URL"('REREGISTER') as apex_url
+-- from dual;                -- https://ol7:8443/ords/f?p=100:USRREG:0:REGISTER:NO::::
+
+-- select "GET_URL"('DEREGISTER') as apex_url
+-- from dual;                -- https://ol7:8443/ords/f?p=100:USRDEREG:0:DEREGISTER:NO::::
+
+-- select "GET_URL"('RESET_PW') as apex_url
+-- from dual;                -- https://ol7:8443/ords/f?p=100:RESETPW:0:RESETPW:NO::::
+
+-- select "GET_URL"('RESET_REG_ATTEMPTS') as apex_url
+-- from dual;                -- https://ol7:8443/ords/f?p=100:USRREG:0:REGISTER:NO::::
+
+-- select "GET_URL"('REG_ATTEMPTS_EXCEEDED') as apex_url
+-- from dual;                -- https://ol7:8443/ords/f?p=100:SUPPORT:0:LOCKEDOUT:NO::::
+
+-- select "GET_URL"('LOCK') as apex_url
+-- from dual;                -- https://ol7:8443/ords/f?p=100:USRLOCKED:0:LOCKED:NO::::
+
+-- select "GET_URL"('UNLOCK') as apex_url
+-- from dual;                -- https://ol7:8443/ords/f?p=100:RESETPW:0:RESETPW:NO::::
+
+-- select "GET_URL"('HOME') as apex_url
+-- from dual;                -- https://ol7:8443/ords/f?p=100:HOME:0:WELCOME:NO::::
+
+-- select "GET_URL"(    p_url => '100:10:'            ||
+--                      nvl(v('APP_SESSION'), 0)      ||
+--                      ':RESTAPI::P102:'             ||
+--                      to_char(sysdate, 'ddmmyyyy')
+--                 ) as apex_url
+-- from dual;               -- https://ol7:8443/ords/f?p=100:10:0:::
+
+-- select "GET_URL"(   'REGISTER'
+--                    , p_params => 'USR,TKN'
+--                    , p_values => 'User@Domain.net,NTA2Mjc3ODJ0LW9ubGluZS5kZTEzNDAyNTY1MDI='
+--                 ) as apex_url
+-- from dual;  --https://ol7:8443/ords/f?p=100:USRREG:0:REGISTER:NO::USR,TKN:User@Domain.net,NTA2Mjc3ODJ0LW9ubGluZS5kZTEzNDAyNTY1MDI=:
+
+-- select "GET_URL"(   'REGISTER'
+--                    , p_params => 'USR,TKN'
+--                    , p_values => 'User@Domain.net,NTA2Mjc3ODJ0LW9ubGluZS5kZTEzNDAyNTY1MDI='
+--                    , p_no_to_null => 1
+--                 ) as apex_url
+-- from dual; -- https://ol7:8443/ords/f?p=100:USRREG:0:REGISTER:::USR,TKN:User@Domain.net,NTA2Mjc3ODJ0LW9ubGluZS5kZTEzNDAyNTY1MDI=:
+
+
+-----------------------------------------------------------------------------------------------------
+-- Parse Username Part from Emai Address
+create function "PARSE_USERNAME_FROM_EMAIL" (
+    p_address varchar2
+) return varchar2
+as
+l_username varchar2(1000);
+begin
+    if instr(p_address, '@') > 0 then
+      l_username := trim(substr(p_address, 1, instr(p_address, '@') - 1));
+    else
+      l_username := trim(p_address);
+    end if;
+  return (l_username);
+end;
+/
+
+-- select parse_username_from_email( 's.obermeyer@t-online.de') as username
+-- from dual; -- s.obermeyer
+
+-----------------------------------------------------------------------------------------------------
+-- Parse Domain Part from Emai Address
+create function "PARSE_DOMAIN_FROM_EMAIL" (
+    p_address varchar2
+) return varchar2
+as
+l_domain varchar2(1000);
+begin
+    if instr(p_address, '@') > 0 then
+      l_domain := trim(substr(p_address, instr(p_address, '@') +1, length(p_address)));
+    else
+      l_domain := trim(p_address);
+    end if;
+  return (l_domain);
+end;
+/
+
+-- select parse_domain_from_email( 's.obermeyer@t-online.de') as domain
+-- from dual;  -- t-online.de
+
+-----------------------------------------------------------------------------------------------------
+-- Apex System Mail Contents by Topic
+create view "APEX_MAIL_TOPIC_CONTENTS"
+as
+with mail_content
+as (
+select
+    apx_mail_id,
+    apx_mail_topic,
+    apx_mail_subject,
+    apx_mail_body,
+    apx_mail_body_html,
+    apx_mail_head as apx_mail_head_unescaped,
+    replace (
+        replace(apx_mail_head , '##GREETING##',
+                nvl(apx_mail_greeting, '##GREETING##')
+        ), '##MAIL_TO##',
+        nvl(
+            nvl(apx_mail_to_user,
+                case when apx_mail_to is not null
+                     then case when instr(apx_mail_to, '@') > 0
+                               then initcap("PARSE_USERNAME_FROM_EMAIL"(apx_mail_to))
+                               else to_char(apx_mail_to)
+                          end
+                end
+                )
+            , '##MAIL_TO##')
+    ) as apx_mail_head,
+    apx_mail_body_content,
+    replace(
+        replace(apx_mail_tail, '##IMG_URL1##',
+                nvl(apx_img_url1, '##IMG_URL1##')),
+            '##IMG_URL1_ALT##',
+            nvl(apx_img_url1_alt, '##IMG_URL1_ALT##')
+            ) as apx_mail_tail,
+    apx_mail_to,
+    apx_mail_to_user,
+    apx_mail_greeting,
+    apx_img_url1,
+    apx_img_url1_alt,
+    apx_text1,
+    apx_text2,
+    apx_url_params,
+    apx_url_values,
+    apx_url_query,
+    apx_parent_mail_id,
+    app_id,
+    apx_app_page,
+    apx_app_request
+from "APEX_MAIL_TOPICS"),
+non_default_mail_content
+as(
+select *
+from "MAIL_CONTENT"
+where apx_mail_topic != 'DEFAULT'),
+default_mail_content
+as (
+select *
+from "MAIL_CONTENT"
+where apx_mail_topic  = 'DEFAULT')
+-- Main Query
+select q.apx_mail_id           as apex_mail_id,
+       q.apx_mail_topic        as apex_mail_topic,
+       q.apx_mail_subject      as mail_subject,
+       q.apx_mail_body         as mail_body,
+       q.apx_mail_body_html    as mail_body_html,
+       q.apx_mail_body_no_url  as mail_body_no_url,
+       q.apx_mail_head         as mail_head,
+       q.apx_mail_tail         as mail_tail,
+       q.apx_page_url          as apex_page_url,
+       q.apx_app_page          as apex_app_page,
+       q.apx_app_request       as apex_page_request,
+       q.apx_app_id            as apex_app_id
+from (
+select
+    m.apx_mail_id,
+    m.apx_mail_topic,
+    m.apx_mail_subject,
+    nvl(m.apx_mail_body, dmc.apx_mail_body) as apx_mail_body,
+    replace(nvl(m.apx_mail_body_html, dmc.apx_mail_body_html), '##MAIL_BODY_CONTENT##',
+        replace(nvl(m.apx_mail_head, dmc.apx_mail_head)                 || chr(10) ||
+                nvl(m.apx_mail_body_content, dmc.apx_mail_body_content) || chr(10) ||
+                nvl(m.apx_mail_tail, dmc.apx_mail_tail)
+                , '##APX_APP_PAGE##',
+                  "GET_URL"(m.apx_mail_topic,
+                            p_app     => nvl(m.app_id, nvl(dmc.app_id, nvl(v('APP_ID'), 100))),
+                            p_page    => m.apx_app_page,
+                            p_request => nvl(m.apx_app_request, dmc.apx_app_request),
+                            p_params  => '##PARAMS##',
+                            p_values  => '##VALUES##'
+                            )
+                )
+            )           as apx_mail_body_html,
+    replace(nvl(m.apx_mail_body_html, dmc.apx_mail_body_html), '##MAIL_BODY_CONTENT##',
+                nvl(m.apx_mail_head, dmc.apx_mail_head)                 || chr(10) ||
+                nvl(m.apx_mail_body_content, dmc.apx_mail_body_content) || chr(10) ||
+                nvl(m.apx_mail_tail, dmc.apx_mail_tail)
+        )               as apx_mail_body_no_url,
+    nvl(m.apx_mail_head, dmc.apx_mail_head) as apx_mail_head,
+    nvl(m.apx_mail_tail, dmc.apx_mail_tail) as apx_mail_tail,
+    nvl(m.app_id, nvl(dmc.app_id, nvl(v('APP_ID'), 100))) as apx_app_id,
+    get_url(m.apx_mail_topic,
+            p_app     => nvl(m.app_id, nvl(dmc.app_id, nvl(v('APP_ID'), 100))),
+            p_page    => m.apx_app_page,
+            p_request => nvl(m.apx_app_request, dmc.apx_app_request),
+            p_params  => '##PARAMS##',
+            p_values  => '##VALUES##')  as apx_page_url,
+    nvl(m.apx_app_page, dmc.apx_app_page) as apx_app_page,
+    nvl(m.apx_app_request, dmc.apx_app_request) as apx_app_request,
+    m.apx_mail_body_content
+from "NON_DEFAULT_MAIL_CONTENT" m left outer join "DEFAULT_MAIL_CONTENT" dmc
+on ( 1 = 1 and m.apx_mail_topic != 'DEFAULT')
+) q
+order by 1;
+
+
+
+------------------------------------------------------------------------------------------------------
+-- Set Apex Email Content
+-- @requires GET_URL and SET_URL
+--
+create procedure "SET_EMAIL_CONTENT" (
+      p_topic           in varchar2        := null
+    , p_mailto          in varchar2        := null
+    , p_subject         in out clob
+    , p_body            in out clob
+    , p_body_html       in out clob
+    , p_params          in varchar2        := null
+    , p_values          in varchar2        := null
+    , p_query           in varchar2        := null
+    , p_app_id          in pls_integer     := null
+    , p_mail_id         in pls_integer     := null
+    , p_debug           in boolean         := false
+ )
+is
+    l_topic                     varchar2(64);
+    l_mailto                    varchar2(128);
+    l_subject                   clob;
+    l_body                      clob;
+    l_body_html                 clob;
+    l_mail_head                 clob;
+    l_mail_tail                 clob;
+    l_mail_body                 clob;
+    l_params                    clob;
+    l_values                    clob;
+    l_query                     clob;
+    l_app_id                    pls_integer;
+    l_mail_id                   pls_integer;
+    l_rowcnt                    pls_integer := 0;
+    l_debug                     boolean;
+
+    -- Constants and Defaults
+    LF              constant    varchar2(2)     := utl_tcp.crlf;
+    QP              constant    varchar2(4)     := chr(38)||'c='; -- url query prefix for app alias urls &c=WORKSPACE_NAME
+    C_APP_ID        constant    pls_integer     := 100;
+    C_MAIL_ID       constant    pls_integer     := null;
+    C_DEBUG         constant    boolean         := false;
+
+    -- Mail Topic Defaults
+    C_TOPIC         constant    clob := 'WELCOME';
+    C_SUBJECT       constant    clob := 'Apex Welcome Testmail'; -- Default Subject
+    C_MAIL_TO       constant    clob := 'Dear User'; -- Default Mail To
+    C_MAIL_HEAD     constant    clob := '<h2>Hello ##MAIL_TO##</h2>';  -- Headline
+    C_MAIL_TAIL     constant    clob := '<p>Sincerely,<br />' || LF ||'Yo Bro from Next Do''<br />'; -- Greeting and Signature
+    C_MAIL_IMG1     constant    clob := ''; -- Image 1
+    C_MAIL_IMG2     constant    clob := ''; -- Image 2
+    C_MAIL_IMG3     constant    clob := '  <img src="http://zapt1.staticworld.net/images/article/2013/04/oracle-logo-100033308-gallery.png" alt="Oracle Logo">'|| LF ||'</p>' || LF; -- Image 3 (included in MAIL_TAIL, so closing p tag needed)
+
+    -- Default Mail Body HTML Text (Head and Tail will be pre- and appended)
+    C_MAIL_BODY     constant    clob :=  LF ||
+        C_MAIL_IMG1|| LF || C_MAIL_HEAD || LF || C_MAIL_IMG2 || LF ||
+        '<p>This is a Testmail from our System.<br />'|| LF ||
+        'You can safely ignore this message.</p>'||
+        LF || C_MAIL_TAIL || LF || C_MAIL_IMG3;
+    C_BODY          constant    clob := 'To view the content of this message, please use an HTML enabled mail client.';
+    C_BODY_HTML     constant    clob := '<html><body>'  || LF ||
+                                        '##MAIL_BODY##' || LF ||
+                                        '</body></html>';
+    C_PARAMS        constant    clob := null;
+    C_VALUES        constant    clob := null;
+    C_QUERY         constant    clob := null;
+
+begin
+
+    -- Init Vars
+    l_body          :=  C_BODY; -- using same default for all non-html emails
+    l_mailto        :=  nvl(p_mailto    , C_MAIL_TO);
+    l_mail_body     :=  replace(C_BODY_HTML, '##MAIL_BODY##',
+                            replace(C_MAIL_BODY, '##MAIL_TO##', l_mailto)
+                                );
+    l_topic         :=  nvl(upper(trim(p_topic)), C_TOPIC);
+    l_app_id        :=  nvl(p_app_id    , nvl(v('APP_ID'), C_APP_ID));
+    l_debug         :=  nvl(p_debug     , C_DEBUG);
+    l_mail_id       :=  nvl(p_mail_id   , C_MAIL_ID);
+    l_params        :=  nvl(p_params    , C_PARAMS);
+    l_values        :=  nvl(p_values    , C_VALUES);
+
+    if (instr(p_query, QP) > 0 or instr(p_query, '?') > 0) then
+        -- we assume a valid query string
+        l_query     :=        nvl(p_query     , C_QUERY);
+    else
+        l_query     :=  QP || nvl(p_query     , C_QUERY);
+    end if;
+
+    -- check Topic and set Body Text get values from table
+    for t in   (
+                select  apex_mail_id,
+                        mail_subject,
+                        mail_body,
+                        mail_body_html,
+                        replace (
+                            replace (
+                                replace(
+                                    replace(mail_body_html , '##PARAMS##', l_params),
+                                        '##VALUES##', l_values),
+                                    '##QUERY##', l_query),
+                            '##MAIL_TO##', l_mailto
+                        ) as mail_body_html_escaped,
+                        apex_app_id
+                from   "APEX_MAIL_TOPIC_CONTENTS"
+               where    apex_mail_id = nvl(p_mail_id   , apex_mail_id)
+                 and    apex_app_id  = nvl(l_app_id    , apex_app_id)
+                 and    upper(trim(apex_mail_topic))   = l_topic
+                )
+    loop
+        l_app_id    := nvl(t.apex_app_id              , l_app_id    );
+        l_mail_id   := nvl(t.apex_mail_id             , C_MAIL_ID   );
+        l_body      := nvl(t.mail_body                , C_BODY      );
+        l_subject   := nvl(t.mail_subject             , C_SUBJECT   );
+        l_body_html := nvl(t.mail_body_html_escaped   , l_mail_body );
+        l_rowcnt    := l_rowcnt + 1;
+    end loop;
+
+    -- nothing found, so set default subject and mail body
+    if (l_rowcnt = 0) then
+        l_subject   := nvl(l_subject, C_SUBJECT);
+        l_body_html := l_mail_body;
+    end if;
+
+    -- Process Defaults for input parameters
+
+    -- subject
+    if (p_subject is not null) then
+        l_subject := p_subject;
+    else
+        l_subject := nvl(l_subject, C_SUBJECT);
+    end if;
+
+    -- body text
+    if (p_body is not null) then
+        l_body := p_body;
+    else
+        l_body := nvl(l_body, C_BODY);
+    end if;
+
+    -- body_html
+    if (p_body_html is not null) then
+        if (instr(lower(p_body_html), '<html>') > 0 and
+            instr(lower(p_body_html), '</body>') > 0) then
+            -- we assume a valid HTML document
+            l_body_html := p_body_html;
+        else
+            l_body_html := replace(C_BODY_HTML, '##MAIL_BODY##', p_body_html);
+        end if;
+    else -- set Default Mail Body
+        l_body_html := nvl(l_body_html, l_mail_body);
+    end if;
+
+    -- set output variables
+    p_subject     := l_subject;
+    p_body        := l_body;
+    p_body_html   := l_body_html;
+
+    if (l_debug) then -- show what we got
+        dbms_output.put_line (
+        '*** SET EMAIL CONTENT Debug:'     || chr(10) ||
+        '  p_topic     => ' || l_topic     || chr(10) ||
+        ', p_mailto    => ' || l_mailto    || chr(10) ||
+        ', p_subject   => ' || l_subject   || chr(10) ||
+        ', p_body      => ' || l_body      || chr(10) ||
+        ', p_body_html => ' || l_body_html || chr(10) ||
+        ', p_params    => ' || l_params    || chr(10) ||
+        ', p_values    => ' || l_values    || chr(10) ||
+        ', p_query     => ' || l_query     || chr(10) ||
+        ', p_app_id    => ' || l_app_id    || chr(10)
+        );
+    end if;
+
+exception when others then
+    -- (re)set output variables
+    p_subject     := '-2 ' || SQLERRM;
+    p_body        := SQLERRM;
+    p_body_html   := '<html><body>' || LF || to_char(SYSDATE, 'DD.MM.YYYY HH24:MI:SS') ||
+                     LF || SQLERRM  || LF ||'</body></html>';
+end;
+/
+
+
+----------------------------------------------------------------------------------------------------------
+-- -- Test Set Mail Content
+-- declare
+--     l_app_id             pls_integer  := 110;
+--     l_topic              varchar2(64) := 'REGISTER';
+--     l_mailto             varchar2(64) := 's.obermeyer@t-online.de';
+--     l_subject            clob := null; --'the new way of getting paid';
+--     l_body               clob := null; --'get a html client';
+--     l_body_html          clob := null; --'<p>Hi Bro''</p>';
+--     l_params             varchar2(4000) := 'USR,TOKEN'; -- target page items
+--     l_values             varchar2(4000) := 's.obermeyer@t-online.de,NTA2Mjc3ODJ0LW9ubGluZS5kZTEzNDAyNTY1MDI='; --nvl(l_username, l_email)||','||l_token
+--     l_query              varchar2(4000) := null;
+-- begin
+--     "SET_EMAIL_CONTENT"(l_topic, l_mailto,
+--                         l_subject,
+--                         l_body,
+--                         l_body_html,
+--                         p_params => l_params,
+--                         p_values => l_values,
+--                         p_query => l_query,
+--                         p_app_id => l_app_id );
+--     dbms_output.put_line('Subject: '   || l_subject);
+--     dbms_output.put_line('Body: '      || l_body);
+--     dbms_output.put_line('Body HTML: ' || l_body_html);
+--     dbms_output.put_line('Params: '    || l_params);
+--     dbms_output.put_line('Values: '    || l_values);
+--     dbms_output.put_line('Query: '     || l_query);
+-- end;
+-- /
+
+----------------------------------------------------------------------------------------------------------
+-- Test Set Mail Content Sample Output
+
+-- 'REGISTER'
+
+-- Subject: Registration Confirmation.
+-- Body: To view the content of this message, please use an HTML enabled mail client.
+
+-- Body HTML: <html><body>
+-- <h2>Hello s.obermeyer@t-online.de</h2>
+-- <p>Thank You for registering again.<br />
+-- Please confirm your registration at <a href="https://ol7:8443/ords/f?p=:USRREGC::CONFIRM:NO::NEWUSER,TOKEN:s.obermeyer@t-online.de,NTA2Mjc3ODJ0LW9ubGluZS5kZTEzNDAyNTY1MDI=">Registration Confirmation</a> page.</p>
+
+-- <p>Sincerely,<br />
+-- Yo Bro from Next Do'<br />
+--   <img src="http://zapt1.staticworld.net/images/article/2013/04/oracle-logo-100033308-gallery.png" alt="Oracle Logo">
+-- </p>
+
+-- </body></html>
+
+-- Param 1: s.obermeyer@t-online.de,NTA2Mjc3ODJ0LW9ubGluZS5kZTEzNDAyNTY1MDI=
+
+
+-- 'REG_ATTEMPTS_EXCEEDED'
+
+-- Subject: Registration Attempts exceeded.
+-- Body: To view the content of this message, please use an HTML enabled mail client.
+
+-- Body HTML: <html><body>
+-- <h2>Hello s.obermeyer@t-online.de</h2>
+-- <p>Your Registration was invalidated, because you exceeded maximum registration attempts.<br />
+-- Please contact our <a href="https://ol7:8443/ords/f?p=:SUPPORT::FEEDBACK:NO::USR,TOKEN:s.obermeyer@t-online.de,NTA2Mjc3ODJ0LW9ubGluZS5kZTEzNDAyNTY1MDI=">Customer Support</a> page for further information.</p>
+
+-- <p>Sincerely,<br />
+-- Yo Bro from Next Do'<br />
+--   <img src="http://zapt1.staticworld.net/images/article/2013/04/oracle-logo-100033308-gallery.png" alt="Oracle Logo">
+-- </p>
+
+-- </body></html>
+
+-- Param 1: s.obermeyer@t-online.de,NTA2Mjc3ODJ0LW9ubGluZS5kZTEzNDAyNTY1MDI=
+
+
+-- 'RESET_PW'
+
+-- Subject: Reset Password Information
+-- Body: To view the content of this message, please use an HTML enabled mail client.
+
+-- Body HTML: <html><body>
+-- <h2>Hello s.obermeyer@t-online.de</h2>
+-- <p>You receive this mail in return to Your Pasword Reset Request.<br />
+-- Please reset your password at our <a href="https://ol7:8443/ords/f?p=:USRRPWD::RESET:NO::USR,TOKEN:s.obermeyer@t-online.de,NTA2Mjc3ODJ0LW9ubGluZS5kZTEzNDAyNTY1MDI=">Passwod Reset</a> page.</p>
+
+-- <p>Sincerely,<br />
+-- Yo Bro from Next Do'<br />
+--   <img src="http://zapt1.staticworld.net/images/article/2013/04/oracle-logo-100033308-gallery.png" alt="Oracle Logo">
+-- </p>
+
+-- </body></html>
+
+----------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------
+-- Set Apex Email Content
+-- @requires GET_URL and SET_URL
+--
+create or replace function "GET_EMAIL_CONTENT" (
+      p_topic            in          varchar2        := null
+    , p_what_to_return   in          varchar2        := null
+    , p_mailto           in          varchar2        := null
+    , p_subject          in          clob            := null
+    , p_body             in          clob            := null
+    , p_body_html        in          clob            := null
+    , p_params           in          clob            := null
+    , p_values           in          clob            := null
+    , p_query            in          clob            := null
+    , p_app_id           in          pls_integer     := null
+    , p_mail_id          in          pls_integer     := null
+ )  return clob
+is
+    l_topic              varchar2(64);
+    l_mailto             varchar2(128);
+    l_what_to_return     varchar2(32); -- [ SUBJECT, BODY, BODY_HTML, ALL (default) ]
+    l_subject            clob;
+    l_body               clob;
+    l_body_html          clob;
+    l_params             clob;
+    l_values             clob;
+    l_query              clob;
+    l_return             clob;
+    l_return_all         clob;
+    l_app_id             pls_integer;
+    l_mail_id            pls_integer;
+
+    LF                   constant varchar2(2)  := utl_tcp.crlf;
+    C_WHAT_TO_RETURN     constant varchar2(32) := 'ALL';
+
+begin
+
+    -- set inputs and defaults
+    l_topic              := p_topic;
+    l_what_to_return     := nvl(upper(trim(p_what_to_return)), C_WHAT_TO_RETURN);
+    l_mailto             := p_mailto;
+    l_subject            := p_subject;
+    l_body               := p_body;
+    l_body_html          := p_body_html;
+    l_params             := p_params;
+    l_values             := p_values;
+    l_query              := p_query;
+    l_app_id             := p_app_id;
+    l_mail_id            := p_mail_id;
+
+    -- set content based on inputs
+    "SET_EMAIL_CONTENT" (
+          p_topic        =>    l_topic
+        , p_mailto       =>    l_mailto
+        , p_subject      =>    l_subject
+        , p_body         =>    l_body
+        , p_body_html    =>    l_body_html
+        , p_params       =>    l_params
+        , p_values       =>    l_values
+        , p_query        =>    l_query
+        , p_app_id       =>    l_app_id
+        , p_mail_id      =>    l_mail_id
+    );
+
+    -- set default return
+    l_return_all  :=    '##MAIL_CONTENT: ' || SYSDATE     || LF ||
+                        '##APP_ID: '       || l_app_id    || LF ||
+                        '##MAIL_ID: '      || l_mail_id   || LF ||
+                        '##TOPIC: '        || l_topic     || LF ||
+                        '##MAILTO: '       || l_mailto    || LF ||
+                        '##SUBJECT: '      || l_subject   || LF ||
+                        '##BODY: '         || l_body      || LF ||
+                        '##BODY_HTML: '    || l_body_html || LF ||
+                        '##PARAMS: '       || l_params    || LF ||
+                        '##VALUES: '       || l_values    || LF ||
+                        '##QUERY: '        || l_query     || LF ;
+
+    -- evaluate return
+    if (l_what_to_return = 'ALL') then
+        l_return    := l_return_all;
+    elsif (l_what_to_return = 'TOPIC') then
+        l_return    := l_topic;
+    elsif (l_what_to_return = 'SUBJECT') then
+        l_return    := l_subject;
+    elsif (l_what_to_return = 'BODY') then
+        l_return    := l_body;
+    elsif (l_what_to_return = 'BODY_HTML') then
+        l_return    := l_body_html;
+    elsif (l_what_to_return = 'PARAMS') then
+        l_return    := l_params;
+    elsif (l_what_to_return = 'VALUES') then
+        l_return    := l_values;
+    elsif (l_what_to_return = 'QUERY') then
+        l_return    := l_query;
+    elsif (l_what_to_return = 'APP') then
+        l_return    := to_clob(l_app_id);
+    elsif (l_what_to_return = 'MAIL_ID') then
+        l_return    := to_clob(l_mail_id);
+    else -- return default
+        l_return    := l_return_all;
+    end if;
+
+    -- Return final output
+    return l_return;
+
+exception when others then
+    l_return := SQLERRM;
+    return l_return;
+end;
+/
+
+--------------------------------------------------------------------------------
+-- -- Test Get Mail Content
+-- select "GET_EMAIL_CONTENT" from dual;
+
+-- --##MAIL_CONTENT:02.01.2018 23:23:25
+-- --##TOPIC:
+-- --##SUBJECT: Apex Welcome Testmail
+-- --##BODY: To view the content of this message, please use an HTML enabled mail client.
+-- --##BODY_HTML: <html><body>
+-- --
+-- --
+-- --<h2>Hello Dear User</h2>
+-- --
+-- --<p>This is a Testmail from our System.<br />
+-- --You can safely ignore this message.</p>
+-- --<p>Sincerely,<br />
+-- --Yo Bro from Next Do'<br />
+-- --  <img src="http://zapt1.staticworld.net/images/article/2013/04/oracle-logo-100033308-gallery.png" alt="Oracle Logo">
+-- --</p>
+-- --
+-- --</body></html>
+-- --##PARAMS:
+-- --##VALUES:
+-- --##QUERY:
+
+
+-- select "GET_EMAIL_CONTENT"('REGISTER') from dual;
+
+-- --##MAIL_CONTENT:02.01.2018 23:24:10
+-- --##TOPIC: REGISTER
+-- --##SUBJECT: Registration Confirmation.
+-- --##BODY: To view the content of this message, please use an HTML enabled mail client.
+-- --##BODY_HTML: <html><body>
+-- --<h2>Hello Dear User</h2>
+-- --<p>Please confirm your registration at <a href="https://ol7:8443/ords/f?p=100:USRREG:0:REGISTER:::::">Registration Confirmation</a> page.</p>
+-- --
+-- --<p>Sincerely,<br />
+-- --Yo Bro from Next Do'<br />
+-- --  <img src="http://zapt1.staticworld.net/images/article/2013/04/oracle-logo-100033308-gallery.png" alt="Oracle Logo">
+-- --</p>
+-- --
+-- --</body></html>
+-- --##PARAMS:
+-- --##VALUES:
+-- --##QUERY:
+
+
+-- select "GET_EMAIL_CONTENT"('REGISTER', p_mailto => 'user@domain.net', p_params => 'USR,TKN', p_values => 'user@domain.net,NTA2Mjc3ODJ0LW9ubGluZS5kZTEzNDAyNTY1MDI=') from dual;
+
+-- --##MAIL_CONTENT: 02.01.2018 23:39:55
+-- --##TOPIC: REGISTER
+-- --##MAILTO: user@domain.net
+-- --##SUBJECT: Registration Confirmation.
+-- --##BODY: To view the content of this message, please use an HTML enabled mail client.
+-- --##BODY_HTML: <html><body>
+-- --<h2>Hello user@domain.net</h2>
+-- --<p>Please confirm your registration at <a href="https://ol7:8443/ords/f?p=100:USRREG:0:REGISTER:::USR,TKN:user@domain.net,NTA2Mjc3ODJ0LW9ubGluZS5kZTEzNDAyNTY1MDI=:">Registration Confirmation</a> page.</p>
+-- --
+-- --<p>Sincerely,<br />
+-- --Yo Bro from Next Do'<br />
+-- --  <img src="http://zapt1.staticworld.net/images/article/2013/04/oracle-logo-100033308-gallery.png" alt="Oracle Logo">
+-- --</p>
+-- --
+-- --</body></html>
+-- --##PARAMS: USR,TKN
+-- --##VALUES: user@domain.net,NTA2Mjc3ODJ0LW9ubGluZS5kZTEzNDAyNTY1MDI=
+-- --##QUERY:
+
+
+-- select "GET_EMAIL_CONTENT"('LOCK') from dual;
+
+-- --##MAIL_CONTENT:02.01.2018 23:25:01
+-- --##TOPIC: LOCK
+-- --##SUBJECT: Account locked!
+-- --##BODY: To view the content of this message, please use an HTML enabled mail client.
+-- --##BODY_HTML: <html><body>
+-- --<h2>Hello Dear User</h2>
+-- --<p>Your Account was locked!<br />
+-- --Please reset your password to unlock Your account at our <a href="https://ol7:8443/ords/f?p=100:USRLOCKED:0:LOCKED:::::">Passwod Reset</a> page.</p>
+-- --
+-- --<p>Sincerely,<br />
+-- --Yo Bro from Next Do'<br />
+-- --  <img src="http://zapt1.staticworld.net/images/article/2013/04/oracle-logo-100033308-gallery.png" alt="Oracle Logo">
+-- --</p>
+-- --
+-- --</body></html>
+-- --##PARAMS:
+-- --##VALUES:
+-- --##QUERY:
+
+-- -- Pricey - runs all for one result
+-- select "GET_EMAIL_CONTENT"('LOCK', 'Subject') as subject from dual;
+
+-- --Account locked!
+
+
+-- select "GET_EMAIL_CONTENT"('REGISTER', 'SUBJECT') as subject from dual;
+
+-- -- Registration Confirmation.
+
+
+--------------------------------------------------------------------------------
+-- Wrapper Functions to Email Properties
+
+-- Email Subject
+create or replace function "GET_EMAIL_SUBJECT" (
+    p_topic     in varchar2  := null, -- [REGISTER, REREGISTER, RESETPW, UNLOCK,..])
+    p_subject   in varchar2  := null
+) return varchar2
+is
+l_subject varchar2(1000);
+begin
+    l_subject := "GET_EMAIL_CONTENT"(p_topic, 'SUBJECT', p_subject => p_subject);
+return l_subject;
+exception when others then
+    l_subject := SQLERRM;
+    return l_subject;
+end;
+/
+
+
+-- Email Text Body
+create or replace function "GET_EMAIL_BODY" (
+    p_topic     in varchar2  := null, -- [REGISTER, REREGISTER, RESETPW, UNLOCK,..])
+    p_body_text in clob      := null
+) return clob
+is
+l_body_text clob;
+begin
+    l_body_text := "GET_EMAIL_CONTENT"(p_topic, 'BODY', p_body => p_body_text);
+return l_body_text;
+exception when others then
+    l_body_text := SQLERRM;
+    return l_body_text;
+end;
+/
+
+-- Email HTML Body
+create or replace function "GET_EMAIL_BODY_HTML" (
+    p_topic     in varchar2  := null, -- [REGISTER, REREGISTER, RESETPW, UNLOCK,..])
+    p_body_html in clob      := null
+) return clob
+is
+l_body_html clob;
+begin
+    l_body_html := "GET_EMAIL_CONTENT"(p_topic, 'BODY_HTML', p_body_html => p_body_html);
+return l_body_html;
+exception when others then
+    l_body_html := '<html><body>'||SQLERRM||'</body></html>';
+    return l_body_html;
+end;
+/
+
+
+--------------------------------------------------------------------------------
+-- SMTP Reply Text by Code.
+create or replace function "GET_SMTP_REPLY_TEXT" (
+    p_code     in           pls_integer
+) return varchar2
+is
+
+    type l_replies_tab  is table of varchar2(4000)
+    index by pls_integer;
+    l_replies      l_replies_tab;
+    l_return       varchar2(4000);
+
+    C_RESULT_OFFSET             constant pls_integer    := 10;
+
+begin
+    -- List of SMTP reply codes.
+    -- https://docs.oracle.com/cd/B19306_01/appdev.102/b14258/u_smtp.htm#i1006659
+    -- Table 178-3 SMTP Reply Codes
+    l_replies(0)   := 'Unknown'; -- not official and used for fallback
+    l_replies(211) := 'System status, or system help reply)';
+    l_replies(214) := 'Help message [Information on how to use the receiver or the meaning of a particular non-standard command; this reply is useful only to the human user])';
+    l_replies(220) := '<domain> Service ready)';
+    l_replies(221) := '<domain> Service closing transmission channel)';
+    l_replies(250) := 'Requested mail action okay, completed)';
+    l_replies(251) := 'User not local; will forward to <forward-path>)';
+    l_replies(252) := 'OK, pending messages for node <node> started. Cannot VRFY user (for example, info is not local), but will take message for this user and attempt delivery.)';
+    l_replies(253) := 'OK, <messages> pending messages for node <node> started)';
+    l_replies(354) := 'Start mail input; end with <CRLF>.<CRLF>)';
+    l_replies(355) := 'Octet-offset is the transaction offset)';
+    l_replies(421) := '<domain> Service not available, closing transmission channel (This may be a reply to any command if the service knows it must shut down.))';
+    l_replies(450) := 'Requested mail action not taken: mailbox unavailable [for example, mailbox busy])';
+    l_replies(451) := 'Requested action terminated: local error in processing)';
+    l_replies(452) := 'Requested action not taken: insufficient system storage)';
+    l_replies(453) := 'You have no mail.)';
+    l_replies(454) := 'TLS not available due to temporary reason. Encryption required for requested authentication mechanism.)';
+    l_replies(458) := 'Unable to queue messages for node <node>)';
+    l_replies(459) := 'Node <node> not allowed: reason)';
+    l_replies(500) := 'Syntax error, command unrecognized (This may include errors such as command line too long.))';
+    l_replies(501) := 'Syntax error in parameters or arguments)';
+    l_replies(502) := 'Command not implemented)';
+    l_replies(503) := 'Bad sequence of commands)';
+    l_replies(504) := 'Command parameter not implemented)';
+    l_replies(521) := '<Machine> does not accept mail.)';
+    l_replies(530) := 'Must issue a STARTTLS command first. Encryption required for requested authentication mechanism.)';
+    l_replies(534) := 'Authentication mechanism is too weak.)';
+    l_replies(538) := 'Encryption required for requested authentication mechanism.)';
+    l_replies(550) := 'Requested action not taken: mailbox unavailable [for , mailbox not found, no access])';
+    l_replies(551) := 'User not local; please try <forward-path>)';
+    l_replies(552) := 'Requested mail action terminated: exceeded storage allocation)';
+    l_replies(553) := 'Requested action not taken: mailbox name not allowed [for example, mailbox syntax incorrect])';
+    l_replies(554) := 'Transaction failed)';
+
+    -- check reply code
+    if (l_replies.exists(p_code)) then
+        l_return := l_replies(p_code);
+    else
+        l_return := l_replies(0);
+    end if;
+
+    return l_return;
+
+exception when others then
+    l_return := rpad(SQLCODE, C_RESULT_OFFSET)             ||
+                     ' GET_SMTP_REPLY_TEXT Error: ' ||
+                     SQLERRM;
+    return l_return;
+    raise;
+end;
+/
+
+--------------------------------------------------------------------------------
+-- Check Email Address Status by Code.
+create or replace function "GET_EMAIL_STATUS_TEXT" (
+     p_code                     in  pls_integer
+) return varchar2
+is
+
+    type l_status_tab           is table of varchar2(4000)
+    index by pls_integer;
+    l_status                    l_status_tab;
+
+    l_code                      pls_integer;
+    l_return                    varchar2(4000);
+
+    C_CODE                      constant pls_integer    := 0;
+    C_RESULT_OFFSET             constant pls_integer    := 10;
+
+begin
+
+    l_code                     := nvl(p_code            , C_CODE);
+
+    -- Check Email Status Codes
+    l_status(-3) := 'Error in Apex Send Mail';
+    l_status(-2) := 'Cannot set Email Content';
+    l_status(-1) := 'Error';
+    l_status(0)  := 'OK';
+    l_status(1)  := 'Invalid Email Address Format';
+    l_status(2)  := 'Invalid Domain Format';
+    l_status(3)  := 'Invalid Domain Response';
+    l_status(4)  := 'Invalid Recipient';
+    l_status(5)  := 'Invalid Email Address Response';
+    l_status(6)  := 'Invalid Email Address Response';
+    l_status(7)  := 'SMTP Transient or Permanent Error!';
+
+    -- check status code
+    if (l_status.exists(l_code)) then
+        l_return := l_status(p_code);
+    else
+        l_return := l_status(-1) || ': Status ID [' || l_code || '] out of range!';
+    end if;
+
+    return l_return;
+
+exception when others then
+    l_return := rpad(SQLCODE, C_RESULT_OFFSET)             ||
+                     ' GET_EMAIL_STATUS_TEXT Error: ' ||
+                     SQLERRM;
+    return l_return;
+    raise;
+end;
+/
+
+--------------------------------------------------------------------------------
+-- -- Test Call to EMAIL_STATUS_TEXT API
+-- select "GET_EMAIL_STATUS_TEXT"(0) as result_text
+-- from dual; -- " OK: "
+-- select "GET_EMAIL_STATUS_TEXT"(-1) as result_text
+-- from dual; --"Error"
+-- select "GET_EMAIL_STATUS_TEXT"(3) as result_text
+-- from dual; --"Invalid Domain Response:"
+
+
+--------------------------------------------------------------------------------
+-- Return Email Address, SMTP or both (ALL) Status by Code.
+create or replace function "GET_RESULT_TEXT" (
+     p_code                     in  pls_integer
+   , p_which                    in  varchar2             := null
+   , p_append_suffix            in  varchar2             := 'FALSE'
+   , p_suffix                   in  varchar2             := ':'
+   , p_wrap_result              in  varchar2             := 'FALSE'
+   , p_wrap_char                in  varchar2             := ' '
+
+) return varchar2
+is
+
+    l_append_suffix             varchar2(10);
+    l_wrap_result               varchar2(10);
+    l_wrap_char                 varchar2(10);
+
+    l_code                      pls_integer;
+    l_which                     varchar2(10);  -- EMAIL | SMPT
+    l_return                    varchar2(4000);
+
+    C_CODE                      constant pls_integer    := 0;
+    C_WHICH                     constant varchar2(10)   := 'MAIL'; -- default collection
+    C_RESULT_OFFSET             constant pls_integer    := 10;
+    C_SUFFIX                    constant varchar2(10)   := ':';
+    C_WRAP_CHAR                 constant varchar2(10)   := ' ';
+    C_TRUE_CHAR                 constant varchar2(10)   := 'TRUE';
+    C_T                         constant varchar2(10)   := C_TRUE_CHAR;
+    C_APPEND_SUFFIX             constant varchar2(10)   := C_T;
+    C_WRAP_RESULT               constant varchar2(10)   := C_T;
+
+begin
+
+    l_code                     := nvl(p_code, C_CODE);
+    l_which                    := nvl(upper(trim(p_which)),         C_WHICH);
+    l_append_suffix            := nvl(upper(trim(p_append_suffix)), C_APPEND_SUFFIX);
+    l_wrap_result              := nvl(upper(trim(p_wrap_result)),   C_WRAP_RESULT);
+    l_wrap_char                := nvl(upper(p_wrap_char),           C_WRAP_CHAR);
+
+    -- check status code
+    if (l_which = 'EMAIL') then
+        l_return := case when (l_wrap_result   = C_T)
+                         then l_wrap_char
+                    end ||
+                    "GET_EMAIL_STATUS_TEXT"(l_code) ||
+                    case when (l_append_suffix = C_T)
+                         then C_SUFFIX
+                    end ||
+                    case when (l_wrap_result   = C_T)
+                         then l_wrap_char
+                    end;
+    elsif (l_which = 'SMTP') then
+        l_return := case when (l_wrap_result   = C_T)
+                         then l_wrap_char
+                    end ||
+                    "GET_SMTP_REPLY_TEXT"(l_code)   ||
+                    case when (l_append_suffix = C_T)
+                         then C_SUFFIX
+                    end ||
+                    case when (l_wrap_result   = C_T)
+                         then l_wrap_char
+                    end;
+    elsif (l_which = 'ALL') then
+        l_return := case when (l_wrap_result   = C_T)
+                         then l_wrap_char
+                    end ||
+                    case when nvl("GET_SMTP_REPLY_TEXT"(l_code)  ,  '0') != '0'
+                         then nvl("GET_SMTP_REPLY_TEXT"(l_code)  , '-1') -- fallback if null
+                         else nvl("GET_EMAIL_STATUS_TEXT"(l_code), '-1') -- fallback to error
+                    end ||
+                    case when (l_append_suffix = C_T)
+                         then C_SUFFIX
+                    end ||
+                    case when (l_wrap_result   = C_T)
+                         then l_wrap_char
+                    end;
+    else
+        l_return := "GET_EMAIL_STATUS_TEXT"(-1) || ': Parameter [' || l_which || '] out of range!';
+    end if;
+
+    return l_return;
+
+exception when others then
+    l_return := rpad(SQLCODE, C_RESULT_OFFSET)             ||
+                     ' GET_RESULT_TEXT Error: ' ||
+                     SQLERRM;
+    return l_return;
+    raise;
+end;
+/
+
+--------------------------------------------------------------------------------
+-- -- Test Calls to GET_RESULT_TEXT API
+-- select "GET_RESULT_TEXT"(3, 'EMAIL') as result_text
+-- from dual; -- "Invalid Domain Response"
+-- select "GET_RESULT_TEXT"(5, 'EMAIL', p_wrap_result => 'TRUE') as result_text
+-- from dual; -- "  Invalid Email Address Response  "
+-- select "GET_RESULT_TEXT"(250, 'SMTP', p_wrap_result => 'TRUE') as result_text
+-- from dual; -- " Requested mail action okay, completed) "
+-- select "GET_RESULT_TEXT"(3, 'EMAIL', p_wrap_result => 'TRUE', p_append_suffix => 'TRUE') as result_text
+-- from dual; -- " Invalid Domain Response "
+-- select "GET_RESULT_TEXT"(10, 'EMAIL', p_wrap_result => 'TRUE', p_wrap_char => '#') as result_text
+-- from dual; -- "#Error: Status ID [10] out of range!#"
+-- select "GET_RESULT_TEXT"(7, 'EMAIL', p_wrap_result => 'TRUE', p_wrap_char => ' *** ') as result_text
+-- from dual; -- " *** SMTP Transient or Permanent Error! *** "
+-- select trim("GET_RESULT_TEXT"(7, 'EMAIL', p_wrap_result => 'TRUE', p_wrap_char => ' *** ')) as result_text
+-- from dual; -- "*** SMTP Transient or Permanent Error! ***" -- above trimmed
+-- select trim("GET_RESULT_TEXT"(252, 'SMTP', p_wrap_result => 'TRUE', p_wrap_char => ' $$$ ')) as result_text
+-- from dual; -- "$$$ OK, pending messages for node <node> started. Cannot VRFY user (for example, info is not local), but will take message for this user and attempt delivery.) $$$"
+
+
+--------------------------------------------------------------------------------
+-- Return Email Address formatted for Result Output.
+create or replace function "GET_EMAIL_STATUS_FORMATTED" (
+      p_code                    in  pls_integer
+    , p_style                   in  varchar2 := null
+    , p_trim_output             in  varchar2 := 'FALSE'
+) return varchar2
+is
+
+    l_code                      pls_integer;
+    l_style                     varchar2(128);
+    l_trim_output               varchar2(10);
+    l_return                    varchar2(4000);
+
+    C_RESULT_OFFSET             constant pls_integer    := 10;
+
+begin
+
+    l_code                      := nvl(p_code, -1);
+    l_style                     := nvl(upper(trim(p_style)), 'RESULT_TEXT');
+    l_trim_output               := nvl(upper(trim(p_trim_output)), 'TRUE');
+
+    -- more styles to be added later
+    if (l_style = 'RESULT_TEXT') then
+        l_return :=   "GET_RESULT_TEXT"(  l_code
+                                        , p_which             => 'EMAIL'
+                                        , p_append_suffix     => 'TRUE'
+                                        , p_suffix            => ':'
+                                        , p_wrap_result       => 'TRUE'
+                                        , p_wrap_char         => ' '
+                                        );
+    end if;
+
+    if (l_trim_output = 'TRUE') then
+        l_return    :=  trim(l_return);
+    elsif (instr(l_return, 'Error:') > 0) then
+        l_return := rtrim(l_return);
+        l_return := substr(l_return, 1, length(l_return) -1) || ' '; -- removed trailing ":"
+    end if;
+
+    return l_return;
+
+exception when others then
+    l_return := rpad(SQLCODE, C_RESULT_OFFSET)             ||
+                     ' GET_EMAIL_STATUS_FORMATTED Error: ' ||
+                     SQLERRM;
+    return l_return;
+    raise;
+end;
+/
+
+
+--------------------------------------------------------------------------------
+-- -- Test Calls to GET_EMAIL_STATUS_FORMATTED API
+-- select "GET_EMAIL_STATUS_FORMATTED" (0) as status_text
+-- from dual; -- " OK: "
+-- select "GET_EMAIL_STATUS_FORMATTED" (3) as status_text
+-- from dual; -- " Invalid Domain Response: "
+-- select "GET_EMAIL_STATUS_FORMATTED" (10) as status_text
+-- from dual; -- " Error: Status ID [10] out of range! " -- removed : at end
+
+
+--------------------------------------------------------------------------------
+-- Check Email Address and Domain Name Format and Accessibility
+create or replace procedure "CHECK_EMAIL_ADDRESS" (
+    p_mailto                    in         varchar2
+  , p_result                    in out     clob
+  , p_domain                    in         varchar2     := null
+  , p_smtp                      in         varchar2     := null
+  , p_from                      in         varchar2     := null
+  , p_check_format              in         boolean      := true
+  , p_check_smtp                in         boolean      := false
+  , p_treat_252_as_ok           in         boolean      := true
+  , p_secure_conn_before_smtp   in         boolean      := false
+)
+is
+
+    l_conn                      utl_smtp.connection;
+    l_reply                     utl_smtp.reply;
+    l_mailto                    varchar2(128)           := null;
+    l_result                    clob                    := null;
+    l_domain                    varchar2(128)           := null;
+    l_smtp                      varchar2(128)           := null;
+    l_from                      varchar2(128)           := null;
+    l_email_format_valid        boolean                 := false;
+    l_domain_format_valid       boolean                 := false;
+    l_check_format              boolean                 := false;
+    l_check_smtp                boolean                 := false;
+    l_step                      pls_integer             := 0;
+
+    C_SMTP                      constant varchar2(128)  := 'localhost'; -- 'securesmtp.t-online.de requires a certificate and startssl';
+    C_FROM                      constant varchar2(128)  := 's.obermeyer@t-online.de';
+    C_DOMAIN                    constant varchar2(128)  := 'example.com';
+    C_MAILTO                    constant varchar2(128)  := 'user@'||C_DOMAIN;
+    C_RESULT                    constant varchar2(1000) := 0;
+    C_CHECK_FORMAT              constant boolean        := true;
+    C_CHECK_SMTP                constant boolean        := false;  -- check if email adress can be verified by SMTP
+    C_RESULT_OFFSET             constant pls_integer    := 10;
+    C_EMAIL_REGEXP              constant clob           := '^.*@[a-z0-9][-a-z.0-9]*[a-z0-9]$';
+    C_EMAIL_NOT_REGEXP          constant clob           := '^.*\.$';
+    C_DOMAIN_REGEXP             constant clob           := '^[a-z0-9][-a-z.0-9]*[a-z0-9]$';
+    C_DOMAIN_NOT_REGEXP         constant clob           := '\.\.';
+    C_SECURE_CONN_BEFORE_SMTP   constant boolean        := false;
+    C_TREAT_252_AS_OK           constant boolean        := true;  -- determines if User VRFY Reply with Code: 252 will treated as ok (for development and testing purposes)
+    C_TRUE_CHAR                 constant varchar2(6)    := 'TRUE';
+    C_T                         constant varchar2(6)    := C_TRUE_CHAR;
+
+    email_address_error         exception;
+
+begin
+
+    -- set Inputs and Defaults
+    l_result                    := '0';
+    l_mailto                    := nvl(p_mailto, C_MAILTO);
+    l_domain                    := "PARSE_DOMAIN_FROM_EMAIL"(l_mailto);
+    l_check_smtp                := nvl(p_check_smtp, C_CHECK_SMTP);
+    l_check_format              := nvl(p_check_format, C_CHECK_FORMAT);
+
+    -- check email address format, if specified to do so
+    if (l_check_format) then
+        l_email_format_valid    :=  (regexp_like(l_mailto, C_EMAIL_REGEXP)
+                                    and not regexp_like(l_domain, C_EMAIL_NOT_REGEXP)
+                                    );
+        l_domain_format_valid   := (regexp_like(l_domain, C_DOMAIN_REGEXP)
+                                    and not regexp_like(l_domain, C_DOMAIN_NOT_REGEXP)
+                                    );
+
+        l_step  := 1;
+        if not l_email_format_valid then
+            l_result := rpad(l_step, C_RESULT_OFFSET) ||
+                        "GET_EMAIL_STATUS_FORMATTED" (l_step) || l_mailto ;
+            raise email_address_error;
+        end if;
+
+        l_step  := 2;
+        if not l_domain_format_valid then
+            l_result := rpad(l_step, C_RESULT_OFFSET) ||
+                        "GET_EMAIL_STATUS_FORMATTED" (l_step) || l_domain ;
+            raise email_address_error;
+        end if;
+
+    end if;
+
+    if (l_check_smtp) then
+        -- verify Domain and Email accessibility
+        utl_tcp.close_all_connections;
+
+        l_conn      := utl_smtp.open_connection (
+                            nvl(l_smtp, C_SMTP),
+                            secure_connection_before_smtp =>
+                                nvl(p_secure_conn_before_smtp,
+                                        C_SECURE_CONN_BEFORE_SMTP)
+                            );
+        l_smtp      := nvl(p_smtp    , C_SMTP);
+        l_from      := nvl(p_from    , C_FROM);
+
+        -- SMTP checks
+        l_step  := 3;
+        l_reply := utl_smtp.helo(l_conn, l_domain);
+            if (l_reply.code != 250) then
+            l_result := rpad(l_step, C_RESULT_OFFSET)   ||
+                        "GET_EMAIL_STATUS_FORMATTED" (l_step) || l_domain ||
+                        ' Reply: ' ||  l_reply.code  ||  ' '  ||
+                         "GET_SMTP_REPLY_TEXT" (l_reply.code) ||
+                        ' Reply Text: ' || l_reply.text;
+            raise email_address_error;
+        end if;
+        l_step  := 4;
+        l_reply := utl_smtp.mail(l_conn, l_from);
+        if (l_reply.code != 250) then
+            l_result := rpad(l_step, C_RESULT_OFFSET) ||
+                        "GET_EMAIL_STATUS_FORMATTED" (l_step) || l_from ||
+                        ' Reply: ' ||   l_reply.code  || ' '  ||
+                         "GET_SMTP_REPLY_TEXT" (l_reply.code) ||
+                        ' Reply Text: ' || l_reply.text;
+            raise email_address_error;
+        end if;
+        l_step := 5;
+        l_reply := utl_smtp.rcpt(l_conn, l_from);
+        if (l_reply.code != 250) then
+            l_result := rpad(l_step, C_RESULT_OFFSET) ||
+                        "GET_EMAIL_STATUS_FORMATTED" (l_step) || l_from  ||
+                        ' Reply: ' ||   l_reply.code  || ' '  ||
+                         "GET_SMTP_REPLY_TEXT" (l_reply.code) ||
+                        ' Reply Text: ' || l_reply.text;
+            raise email_address_error;
+        end if;
+        l_step := 6;
+        l_reply := utl_smtp.vrfy(l_conn, l_mailto);
+        if (nvl(p_treat_252_as_ok, C_TREAT_252_AS_OK)) then
+            if (l_reply.code not in (250, 251, 252)) then
+                l_result := rpad(l_step, C_RESULT_OFFSET) ||
+                            "GET_EMAIL_STATUS_FORMATTED" (l_step) || l_mailto ||
+                            ' Reply: '  ||  l_reply.code  ||  ' ' ||
+                             "GET_SMTP_REPLY_TEXT" (l_reply.code) ||
+                            ' Reply Text: ' || l_reply.text;
+                raise email_address_error;
+            else --reset result
+                l_result := '0';
+            end if;
+        elsif (l_reply.code not in (250, 251)) then
+            l_result := rpad(l_step, C_RESULT_OFFSET) ||
+                        "GET_EMAIL_STATUS_FORMATTED" (l_step) || l_mailto ||
+                        ' Reply: '  || l_reply.code  ||  ' '  ||
+                         "GET_SMTP_REPLY_TEXT" (l_reply.code) ||
+                        ' Reply Text: ' || l_reply.text;
+                raise email_address_error;
+        else  --reset result
+                l_result := '0';
+        end if;
+
+        utl_smtp.quit(l_conn);
+
+    end if;
+
+    if ( nvl(l_result, '0') = '0') then
+        p_result    :=  rpad(nvl(l_result, '0'), C_RESULT_OFFSET) ||
+                                ' OK ' ||
+                                case when l_reply.code is null  -- check_smtp = false
+                                     then 'Email Address Format'
+                                     else 'SMTP'
+                                end ||  ' succeeded. ' || l_reply.code;
+    end if;
+
+exception
+    -- email address check failed
+    when email_address_error then
+        p_result := l_result;
+        begin
+            utl_smtp.quit(l_conn);
+            exception when  utl_smtp.transient_error or
+                            utl_smtp.permanent_error then null;
+                            -- when the smtp server is down or unavailable, we don't have
+                            -- a connection to the server. The QUIT call raises an
+                            -- exception that we can ignore.
+        end;
+    -- generic mail errors
+    when    UTL_SMTP.TRANSIENT_ERROR or
+            UTL_SMTP.PERMANENT_ERROR then
+            l_step      :=  7;
+            l_result    :=  rpad(l_step, C_RESULT_OFFSET)         ||
+                            "GET_EMAIL_STATUS_FORMATTED" (l_step) ||
+                            SQLERRM ;
+            p_result := l_result;
+            begin
+            utl_smtp.quit(l_conn);
+            exception
+                when utl_smtp.transient_error or utl_smtp.permanent_error then
+                null;
+            end;
+
+    when others then
+            l_result  := rpad(SQLCODE, C_RESULT_OFFSET)             ||
+                                   ' GET_EMAIL_STATUS_FORMATTED Error: ' ||
+                                   SQLERRM;
+            p_result := l_result;
+    raise;
+end;
+/
+
+
+
+--------------------------------------------------------------------------------
+-- Function IS_VALID_EMAIL returns BOOLEAN
+create or replace function "IS_VALID_EMAIL" (
+    p_email                         in         varchar2
+  , p_check_format                  in         boolean  := false
+  , p_check_smtp                    in         boolean  := true
+  , p_treat_252_as_ok               in         boolean  := true
+  , p_secure_conn_before_smtp       in         boolean  := false
+  , p_output_result                 in         boolean  := false
+) return boolean
+is
+    l_result                        clob;
+    l_return                        boolean;
+    l_check_format                  boolean;
+    l_check_smtp                    boolean;
+    l_treat_252_as_ok               boolean;
+    l_secure_conn_before_smtp       boolean;
+begin
+
+    l_check_format                  := p_check_format;
+    l_check_smtp                    := p_check_smtp;
+    l_treat_252_as_ok               := p_treat_252_as_ok;
+    l_secure_conn_before_smtp       := p_secure_conn_before_smtp;
+
+    "CHECK_EMAIL_ADDRESS"(
+        p_mailto                     =>   p_email
+      , p_result                     =>   l_result
+      , p_check_format               =>   l_check_format
+      , p_check_smtp                 =>   l_check_smtp
+      , p_treat_252_as_ok            =>   l_treat_252_as_ok
+      , p_secure_conn_before_smtp    =>   l_secure_conn_before_smtp
+    );
+
+    if (p_output_result) then
+        dbms_output.put_line(SYSDATE ||
+                             ' IS_VALID_EMAIL Function Result:  '|| chr(10) ||
+                             SYSDATE || ' Code: ' || substr(l_result, 1, 1) ||
+                             substr(l_result, 10));
+    end if;
+
+    if (to_number(substr(l_result, 1, 1)) = 0) then
+        l_return := true;
+    else
+        l_return := false;
+    end if;
+
+    return l_return;
+
+exception when others then
+return false;
+end;
+/
+
+
+--------------------------------------------------------------------------------
+-- -- Test Call to IS_VALID_EMAIL API returning Boolean
+-- declare
+-- l_email varchar2(100) := 's.obermeyer@t-online.de';
+-- begin
+--   if (IS_VALID_EMAIL(  l_email
+--                      , p_treat_252_as_ok => true
+--                      , p_output_result => true
+--                      , p_check_smtp => true
+--                      )
+--       ) then
+--       dbms_output.put_line(l_email || ' is valid');
+--   else
+--       dbms_output.put_line(l_email || ' is invalid');
+--   end if;
+-- end;
+-- /
+
+--------------------------------------------------------------------------------
+-- Function IS_VALID_EMAIL_ADDRESS returns CLOB
+create or replace function "IS_VALID_EMAIL_ADDRESS" (
+    p_email                         in         varchar2
+  , p_check_format                  in         varchar2 := 'FALSE'
+  , p_check_smtp                    in         varchar2 := 'TRUE'
+  , p_treat_252_as_ok               in         varchar2 := 'TRUE'
+  , p_secure_conn_before_smtp       in         varchar2 := 'FALSE'
+) return clob
+is
+    l_result                        clob;
+    l_return                        clob;
+    l_check_format                  boolean;
+    l_check_smtp                    boolean;
+    l_treat_252_as_ok               boolean;
+    l_secure_conn_before_smtp       boolean;
+
+    C_RESULT_OFFSET                 constant  pls_integer := 10;
+    C_TRUE_CHAR                     constant varchar2(6)  := 'TRUE';
+    C_T                             constant varchar2(6)  := C_TRUE_CHAR;
+
+begin
+
+    l_check_format                  := case upper(p_check_format)
+                                       when C_T then true else false end;
+    l_check_smtp                    := case upper(p_check_smtp)
+                                       when C_T then true else false end;
+    l_treat_252_as_ok               := case upper(p_treat_252_as_ok)
+                                       when C_T then true else false end;
+    l_secure_conn_before_smtp       := case upper(p_secure_conn_before_smtp)
+                                       when C_T then true else false end;
+
+
+    "CHECK_EMAIL_ADDRESS"(
+        p_mailto                     =>   p_email
+      , p_result                     =>   l_result
+      , p_check_format               =>   l_check_format
+      , p_check_smtp                 =>   l_check_smtp
+      , p_treat_252_as_ok            =>   l_treat_252_as_ok
+      , p_secure_conn_before_smtp    =>   l_secure_conn_before_smtp
+    );
+
+    if (l_result is not null) then
+        l_return := substr(l_result, 1, 2) ||
+                    substr(l_result, C_RESULT_OFFSET);
+    else
+        l_return := rpad('-1', C_RESULT_OFFSET) || 'Unkown Result';
+    end if;
+
+    return l_return;
+
+exception when others then
+    l_return := rpad(SQLCODE, C_RESULT_OFFSET)    ||
+                ' IS_VALID_EMAIL_ADDRESS Error: ' ||
+                SQLERRM;
+    return l_return;
+end;
+/
+
+--------------------------------------------------------------------------------
+-- -- Test Call to IS_VALID_EMAIL_ADDRESS
+-- select is_valid_email_address('s.obermeyer@t-online.de') as is_valid_email_address
+-- from dual; -- "0   OK SMTP succeeded. 252"
+
+-- select is_valid_email_address(  's.obermeyer@t-online.de'
+--                               , p_treat_252_as_ok => 'TRUE') as is_valid_email_address
+-- from dual; -- "0   OK SMTP succeeded. 252"
+
+-- select is_valid_email_address(  's.obermeyer@t-online.de'
+--                               , p_treat_252_as_ok => 'FALSE') as is_valid_email_address
+-- from dual; -- "6   Invalid Email Address Response: s.obermeyer@t-online.de Reply: 252 OK, pending messages for node <node> started. Cannot VRFY user (for example, info is not local), but will take message for this user and attempt delivery.) Reply Text: 2.0.0 s.obermeyer@t-online.de"
+
+
+--------------------------------------------------------------------------------
+-- Function IS_VALID_EMAIL_ADDRESS returns CLOB
+create or replace function "IS_VALID_EMAIL_ADDRESS_CODE" (
+    p_email                         in         varchar2
+  , p_check_format                  in         varchar2 := 'TRUE'
+  , p_check_smtp                    in         varchar2 := 'FALSE'
+  , p_treat_252_as_ok               in         varchar2 := 'TRUE'
+  , p_secure_conn_before_smtp       in         varchar2 := 'FALSE'
+  , p_shift_result                  in         pls_integer := null
+) return pls_integer
+is
+    l_result                        clob;
+    l_return                        pls_integer;
+    l_shift_result                  pls_integer;
+    l_check_format                  boolean;
+    l_check_smtp                    boolean;
+    l_treat_252_as_ok               boolean;
+    l_secure_conn_before_smtp       boolean;
+
+    C_RESULT_OFFSET                 constant  pls_integer := 10;
+    C_SHIFT_RESULT                  constant  pls_integer :=  0;
+    C_TRUE_CHAR                     constant varchar2(6)  := 'TRUE';
+    C_T                             constant varchar2(6)  := C_TRUE_CHAR;
+
+begin
+
+    l_check_format                  := case upper(p_check_format)
+                                       when C_T
+                                       then true else false end;
+    l_check_smtp                    := case upper(p_check_smtp)
+                                       when C_T
+                                       then true else false end;
+    l_treat_252_as_ok               := case upper(p_treat_252_as_ok)
+                                       when C_T
+                                       then true else false end;
+    l_secure_conn_before_smtp       := case upper(p_secure_conn_before_smtp)
+                                       when C_T
+                                       then true else false end;
+    l_shift_result                  := nvl(p_shift_result, C_SHIFT_RESULT);
+
+    "CHECK_EMAIL_ADDRESS"(
+        p_mailto                     =>   p_email
+      , p_result                     =>   l_result
+      , p_check_format               =>   l_check_format
+      , p_check_smtp                 =>   l_check_smtp
+      , p_treat_252_as_ok            =>   l_treat_252_as_ok
+      , p_secure_conn_before_smtp    =>   l_secure_conn_before_smtp
+    );
+
+    if (l_result is not null) then
+        l_return := to_number(substr(l_result, 1, C_RESULT_OFFSET)) + l_shift_result;
+    else
+        l_return := -1 + l_shift_result;
+    end if;
+
+    return l_return;
+
+exception when others then
+    l_return := -1 + l_shift_result;
+    return l_return;
+    raise;
+end;
+/
+
+--------------------------------------------------------------------------------
+-- -- Test Call to IS_VALID_EMAIL_ADDRESS_CODE
+-- select "IS_VALID_EMAIL_ADDRESS_CODE"('s.obermeyer@t-online.de') as is_valid_email_address
+-- from dual; -- "0" is true in this model
+
+-- select "IS_VALID_EMAIL_ADDRESS_CODE"( 's.obermeyer@t-online.de'
+--                                      , p_treat_252_as_ok => 'TRUE'
+--                                      , p_shift_result  => 1) as is_valid_email_address
+-- from dual; -- "1"
+
+-- select "IS_VALID_EMAIL_ADDRESS_CODE"('s.obermeyer@t-online.de'
+--                                      , p_treat_252_as_ok => 'FALSE') as is_valid_email_address_code
+-- from dual; -- "6"
+
+-- select "IS_VALID_EMAIL_ADDRESS_CODE"('s.obermeyer@t-online.de'
+--                                      , p_treat_252_as_ok => 'FALSE'
+--                                      , p_shift_result  => 1) as is_valid_email_address_code
+-- from dual; -- "7"
+
+-- -- get the text for a status
+-- select "IS_VALID_EMAIL_ADDRESS_CODE"('s.obermeyer@t-online.de'
+--                                      , p_treat_252_as_ok => 'TRUE') as is_valid_email_address_code,
+--        "GET_EMAIL_STATUS_TEXT"(is_valid_email_address_code('s.obermeyer@t-online.de'
+--                                   , p_treat_252_as_ok => 'TRUE')) as email_address_status
+-- from dual; -- "0"	"OK"
+
+-- select "IS_VALID_EMAIL_ADDRESS_CODE"('s.obermeyer@t-online.de'
+--                                      , p_treat_252_as_ok => 'FALSE') as is_valid_email_address_code,
+--        "GET_EMAIL_STATUS_TEXT"(is_valid_email_address_code('s.obermeyer@t-online.de'
+--                                   , p_treat_252_as_ok => 'FALSE')) as email_address_status
+-- from dual; -- "6"	"Invalid Email Address Response"
+
+
+--------------------------------------------------------------------------------
+--
+-- Send Mail
+--
+-- https://docs.oracle.com/cd/E14373_01/apirefs.32/e13369/apex_mail.htm#AEAPI342
+-- This procedure sends an outbound email message from an application.
+-- Although you can use this procedure to pass in either a
+-- VARCHAR2 or a CLOB to p_body and  p_body_html, the data types must be the same.
+-- In other words, you cannot pass a CLOB to P_BODY and a VARCHAR2 to p_body_html.
+-- When using APEX_MAIL.SEND, remember the following:
+-- No single line may exceed 1000 characters. The SMTP/MIME specification dictates
+-- that no single line shall exceed 1000 characters.
+-- To comply with this restriction, you must add a carriage return or
+-- line feed characters to break up your p_body or p_body_html parameters into chunks
+-- of 1000 characters or less. Failing to do so will result in erroneous email messages,
+-- including partial messages or messages with extraneous exclamation points.
+-- Plain text and HTML email content. Passing a value to p_body, but not p_body_html results
+-- in a plain text message. Passing a value to p_body and  p_body_html yields a multi-part message
+-- that includes both plain text and HTML content. The settings and capabilities of the recipient's
+-- email client determine what displays.
+-- Although most modern email clients can read an HTML formatted email,
+-- remember that some users disable this functionality to address security issues.
+-- Avoid images. When referencing images in p_body_html using the <img /> tag,
+-- remember that the images must be accessible to the recipient's email client
+-- in order for them to see the image.
+
+-- For example, suppose you reference an image on your network called hello.gif as follows:
+-- <img src="http://someserver.com/hello.gif" alt="Hello" />]
+-- In this example, the image is not attached to the email, but is referenced by the email.
+-- For the recipient to see it, they must be able to access the image using a Web browser.
+-- If the image is inside a firewall and the recipient is outside of the firewall,
+-- the image will not display. For this reason, avoid using images. If you must include images,
+-- be sure to include the ALT attribute to provide a textual description
+-- in the event the image is not accessible.
+--
+--------------------------------------------------------------------------------
+create or replace procedure "SEND_MAIL" (
+      p_mailto          in varchar2
+    , p_result          in out pls_integer
+    , p_from            in varchar2        := null
+    , p_subject         in varchar2        := null
+    , p_body            in clob            := null
+    , p_body_html       in clob            := null
+    , p_params          in varchar2        := null
+    , p_values          in varchar2        := null
+    , p_query           in varchar2        := null
+    , p_topic           in varchar2        := null
+    , p_app_id          in pls_integer     := null
+    , p_smtp_server     in varchar2        := null
+    , p_check_address   in boolean         := null
+    , p_check_smtp      in varchar2        := null
+    , p_send_testmail   in boolean         := false
+    , p_debug_only      in boolean         := false
+    )
+is
+
+    l_mailto            varchar2(128);
+    l_from              varchar2(128);
+    l_subject           varchar2(128);
+    l_topic             varchar2(128);
+    l_body              clob;
+    l_body_html         clob;
+    l_params            clob;
+    l_values            clob;
+    l_query             clob;
+    l_app_id            pls_integer;
+    l_result            pls_integer;
+    l_check_address     boolean;
+    l_check_smtp        varchar2(6);
+    l_smtp_server       varchar2(128);
+    l_return_code       varchar2(10);
+    l_return_text       varchar2(1000);
+    l_send_testmail     boolean;
+    l_debug_only        boolean;
+
+    C_DEBUG_ONLY        constant boolean        := false; -- only dbms_output but dont send mail
+    C_SEND_TESTMAIL     constant boolean        := true;  -- allow to send mail with Testmail Subject (see below)
+    C_SMTP_SERVER       constant varchar2(128)  := 'localhost'; -- 'securesmtp.t-online.de requires a certificate and startssl';
+    C_FROM              constant varchar2(128)  := 's.obermeyer@t-online.de';
+    C_DOMAIN            constant varchar2(128)  := 'example.com';
+    C_MAILTO            constant varchar2(128)  := 'user@'||C_DOMAIN;
+    C_RESULT            constant pls_integer    := 0;
+    C_CHECK_ADDRESS     constant boolean        := true;
+    C_CHECK_SMTP        constant varchar2(6)    := 'FALSE';
+    C_RESULT_OFFSET     constant pls_integer    := 10;
+    C_TRUE_CHAR         constant varchar2(6)    := 'TRUE';
+    C_T                 constant varchar2(6)    := C_TRUE_CHAR;
+    -- Mail Topic Defaults
+    LF                  constant varchar2(2)    := utl_tcp.crlf;
+    QP                  constant varchar2(4)    := chr(38)||'c='; -- url query prefix for app alias urls &c=WORKSPACE_NAME
+    C_APP_ID            constant pls_integer    := 100;
+    C_MAIL_ID           constant pls_integer    := null;
+    C_TOPIC             constant clob           := null;
+    C_SUBJECT           constant clob           := null;
+    C_BODY              constant clob           := null;
+    C_BODY_HTML         constant clob           := null;
+    C_PARAMS            constant clob           := null;
+    C_VALUES            constant clob           := null;
+    C_QUERY             constant clob           := null;
+
+    EMAIL_SEND_ERROR    exception;
+
+begin
+
+    -- Init Vars
+    l_mailto            := nvl(p_mailto,        C_MAILTO);
+    l_from              := nvl(p_from,          C_FROM);
+    l_topic             := nvl(p_topic,         C_TOPIC);
+    l_subject           := nvl(p_subject,       C_SUBJECT);
+    l_body              := nvl(p_body,          C_BODY);
+    l_body_html         := nvl(p_body_html,     C_BODY_HTML);
+    l_params            := nvl(p_params,        C_PARAMS);
+    l_values            := nvl(p_values,        C_VALUES);
+    l_result            := nvl(p_result,        C_RESULT);
+    l_check_address     := nvl(p_check_address, C_CHECK_ADDRESS);
+    l_check_smtp        := nvl(p_check_smtp,    C_CHECK_SMTP);
+    l_smtp_server       := nvl(p_smtp_server,   C_SMTP_SERVER);
+    l_send_testmail     := nvl(p_send_testmail, C_SEND_TESTMAIL);
+    l_debug_only        := nvl(p_debug_only,    C_DEBUG_ONLY);
+    l_app_id            := nvl(p_app_id,        nvl(p_app_id, nvl(v('APP_ID'), C_APP_ID)));
+    -- url query parameter
+    if (instr(p_query, QP) > 0
+        or
+        instr(p_query, '?') > 0) then
+        -- we assume a valid query string
+        l_query     :=        nvl(p_query     , C_QUERY);
+    else
+        l_query     :=  QP || nvl(p_query     , C_QUERY);
+    end if;
+
+    -- set Apex Environment
+    for c1 in (
+        select workspace_id
+        from apex_applications
+        where application_id = l_app_id ) loop
+        apex_util.set_security_group_id(p_security_group_id => c1.workspace_id);
+    end loop;
+
+    -- check Email Address if specified to do so
+    if (l_check_address) then
+        l_result := "IS_VALID_EMAIL_ADDRESS_CODE"(l_mailto, p_check_smtp => l_check_smtp);
+        if (l_result != 0) then
+            l_return_code := l_result;
+            l_return_text := "GET_EMAIL_STATUS_TEXT"(l_result);
+            raise EMAIL_SEND_ERROR;
+        end if;
+    end if;
+
+    -- use Email Topics to generate predefined Email Content (see SET_EMAIL_CONTENT for details)
+    if (l_topic is not null) then
+            "SET_EMAIL_CONTENT"(  p_topic     => l_topic
+                                , p_mailto    => l_mailto
+                                , p_subject   => l_subject
+                                , p_body      => l_body
+                                , p_body_html => l_body_html
+                                , p_params    => l_params
+                                , p_values    => l_values
+                                , p_query     => l_query
+                                , p_app_id    => l_app_id
+                                , p_debug     => l_debug_only
+                                );
+
+        l_return_code := substr(l_subject, 1, 2);
+        if (l_return_code = '-2') then
+            l_return_code := l_result;
+            l_return_text := 'Error in procedure SET_EMAIL_CONTENT: ' ||
+                             "GET_EMAIL_STATUS_TEXT"(l_result);
+            raise EMAIL_SEND_ERROR;
+        end if;
+    end if;
+
+    if (    l_mailto    is not null
+        and l_from      is not null
+        and l_body      is not null
+        and l_body_html is not null
+        and l_subject   is not null
+        or (l_send_testmail and instr(upper(l_subject), 'TESTMAIL') > 0)
+        ) then
+
+        if (l_debug_only) then
+            dbms_output.put_line (
+            '*** SEND EMAIL Debug:'            || chr(10) ||
+            '  p_topic     => ' || l_topic     || chr(10) ||
+            ', p_mailto    => ' || l_mailto    || chr(10) ||
+            ', p_subject   => ' || l_subject   || chr(10) ||
+            ', p_body      => ' || l_body      || chr(10) ||
+            ', p_body_html => ' || l_body_html || chr(10) ||
+            ', p_params    => ' || l_params    || chr(10) ||
+            ', p_values    => ' || l_values    || chr(10) ||
+            ', p_query     => ' || l_query     || chr(10) ||
+            ', p_app_id    => ' || l_app_id    || chr(10)
+            );
+
+        else  -- send the mail
+            apex_mail.send (
+                p_to             => l_mailto,      -- change to your email address
+                p_from           => l_from,        -- change to a real senders email address
+                p_body           => l_body,
+                p_body_html      => l_body_html,
+                p_subj           => l_subject
+            );
+
+        end if;
+
+        l_result := 0;
+
+    else
+        l_result := -3;
+        l_return_code := l_result;
+        l_return_text :=    "GET_EMAIL_STATUS_TEXT"(l_result)                  ||
+                            case l_mailto    when null then ' Mail To '    end ||
+                            case l_from      when null then ' From '       end ||
+                            case l_subject   when null then ' Subject '    end ||
+                            case l_body      when null then ' Body Text '  end ||
+                            case l_body_html when null then ' Body HTML '  end ||
+                            ' may not be null!';
+        raise EMAIL_SEND_ERROR;
+    end if;
+
+    -- set the output variable
+    p_result := l_result;
+
+exception
+    when EMAIL_SEND_ERROR then
+        l_result      := 1;
+        p_result      := l_result;
+        l_return_text := SYSDATE||' *** SEND_EMAIL Runtime Exception: [' ||
+                         l_return_code ||  ']: '  || l_return_text ;
+        htp.p ('<p>'  || l_return_text || '</p>');
+        dbms_output.put_line (l_return_text);
+    when others then
+        l_result := 1;
+        p_result := l_result;
+        l_return_text := SYSDATE||' *** SEND_MAIL SQL Exception: ' || SQLERRM;
+        htp.p ('<p>' || l_return_text || '</p>');
+        dbms_output.put_line (l_return_text);
+    raise;
+end "SEND_MAIL";
+/
+
+
+-----------------------------------------------------------------------------
+-- -- Test Send Email
+-- declare
+-- l_result pls_integer;
+-- begin
+--     send_mail(  p_mailto => 's.obermeyer@t-online.de'
+--               , p_result => l_result
+--               , p_topic  => 'REGISTER'
+--               , p_app_id => 110  -- needed for Topic to work :-)
+--               , p_debug_only => true);
+--     dbms_output.put_line('*** Send Mail returned: ' || l_result);
+-- end;
+-- /
 ------------------------------------------------------------------
 -- Funtion to return Component Versions
 
@@ -3758,7 +6152,7 @@ from dual);
 --
 ------------------------------------------------------------------
 
--- Get Version of a Component
+-- Get a Token for Authentication or Authorization
 create function  "APX_GET_TOKEN" (
 p_input_str varchar2 := 'UEeCC1w9t4Gbmoq9G7EgP3pz0Ws', -- some random string as default
 p_token_type varchar2 := 'BASE64', -- [BASE64, 3DIGITS, 4DIGITS, 6DIGITS, 2X4DIGITS]
@@ -4828,6 +7222,6 @@ set pages 0 line 120 define off verify off feed off echo off timing off
 
 EXIT SQL.SQLCODE;
 
-       ---- 17/12/20 22:02  End of SQL Build APX  ----
+       ---- 18/01/08 02:23  End of SQL Build APX  ----
 ---------------------------------------------------------------
 
