@@ -3808,7 +3808,7 @@ You can safely ignore this message.
 '<p>
   Sincerely,<br /><br />
     Yo Bro from Next Do''<br />
-  <img src="##IMG_URL1##" alt="##IMG_URL1_ALT">
+  <img src="##IMG_URL1##" alt="##IMG_URL1_ALT##">
 </p>',
 null,    -- mailto will only be replaced in mail_head if not null
 'Hello', -- Greeting
@@ -4362,9 +4362,9 @@ select
         )               as apx_mail_body_no_url,
     nvl(m.apx_mail_head, dmc.apx_mail_head) as apx_mail_head,
     nvl(m.apx_mail_tail, dmc.apx_mail_tail) as apx_mail_tail,
-    nvl(m.app_id, nvl(dmc.app_id, nvl(v('APP_ID'), 100))) as apx_app_id,
+    nvl(m.app_id, nvl(dmc.app_id, nvl(v('APP_ID'), 0))) as apx_app_id,
     get_url(m.apx_mail_topic,
-            p_app     => nvl(m.app_id, nvl(dmc.app_id, nvl(v('APP_ID'), 100))),
+            p_app     => nvl(m.app_id, nvl(dmc.app_id, nvl(v('APP_ID'), 0))),
             p_page    => m.apx_app_page,
             p_request => nvl(m.apx_app_request, dmc.apx_app_request),
             p_params  => '##PARAMS##',
