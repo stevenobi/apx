@@ -3946,17 +3946,17 @@ is
     -- http[s]://host:port/f?p={APP_ID}:{PAGE}:{SESSION}:{REQUEST}:{DEBUG}:{CLEARCACHE}:{PARAMS}:{VALUES}:{PRINTER_FRIENDLY}{?QUERY}
 
     l_url                    clob;
-    l_url_prefix             varchar2(32);
-    l_topic                  varchar2(64);   -- when used inside APXUSR context (see code for values)
-    l_app                    varchar2(64);
-    l_page                   varchar2(64);
-    l_session                varchar2(64);
-    l_request                varchar2(1000);
-    l_debug                  varchar2(64);
-    l_clearcache             varchar2(1000); -- RP = ResetPagination, APP = All Pages for current app, SESSION = Same as APP just with all items in current session, 1,2,3,..comma separated PAGE_ID list to clear cache on.
+    l_url_prefix             varchar2(4000);
+    l_topic                  varchar2(4000);   -- when used inside APXUSR context (see code for values)
+    l_app                    varchar2(4000);
+    l_page                   varchar2(4000);
+    l_session                varchar2(4000);
+    l_request                varchar2(4000);
+    l_debug                  varchar2(4000);
+    l_clearcache             varchar2(4000); -- RP = ResetPagination, APP = All Pages for current app, SESSION = Same as APP just with all items in current session, 1,2,3,..comma separated PAGE_ID list to clear cache on.
     l_params                 varchar2(4000); -- Comma-delimited list of item names used to set session state with a URL. (f.e.'USR,TOKEN').
     l_values                 varchar2(4000); -- List of item values used to set session state within a URL. Item values cannot include colons, but can contain commas.
-    l_printerf               varchar2(64);   -- If PrinterFriendly is set to Yes, the page is being rendered in printer friendly mode.
+    l_printerf               varchar2(4000);   -- If PrinterFriendly is set to Yes, the page is being rendered in printer friendly mode.
     l_query                  varchar2(4000); -- ? URL query string (optional and used with RESTful Requests or APP Alias Requests wher Workspace is specified by the &c argument).
     l_rowcnt                 pls_integer := 0;
 
@@ -4098,16 +4098,16 @@ is
 
     l_url                    clob;
 
-    l_topic                  varchar2(64);     -- when used inside APXUSR context (see code for values)
-    l_app                    varchar2(64);
-    l_page                   varchar2(64);
-    l_session                varchar2(64);
-    l_request                varchar2(1000);
-    l_debug                  varchar2(64);
-    l_clearcache             varchar2(1000);   -- RP = ResetPagination, APP = All Pages for current app, SESSION = Same as APP just with all items in current session, 1,2,3,..comma separated PAGE_ID list to clear cache on.
+    l_topic                  varchar2(4000);     -- when used inside APXUSR context (see code for values)
+    l_app                    varchar2(4000);
+    l_page                   varchar2(4000);
+    l_session                varchar2(4000);
+    l_request                varchar2(4000);
+    l_debug                  varchar2(4000);
+    l_clearcache             varchar2(4000);   -- RP = ResetPagination, APP = All Pages for current app, SESSION = Same as APP just with all items in current session, 1,2,3,..comma separated PAGE_ID list to clear cache on.
     l_params                 varchar2(4000);   -- Comma-delimited list of item names used to set session state with a URL. (f.e.'USR,TOKEN').
     l_values                 varchar2(4000);   -- List of item values used to set session state within a URL. Item values cannot include colons, but can contain commas.
-    l_printerf               varchar2(64);     -- If PrinterFriendly is set to Yes, the page is being rendered in printer friendly mode.
+    l_printerf               varchar2(4000);     -- If PrinterFriendly is set to Yes, the page is being rendered in printer friendly mode.
     l_query                  varchar2(4000);   -- ? URL query string (optional and used with RESTful Requests or APP Alias Requests wher Workspace is specified by the &c argument f.e:: f?p=common_alias:home:&APP_SESSION.&c=WORKSPACE_A).
     l_no_to_null             boolean;
 
