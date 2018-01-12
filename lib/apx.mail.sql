@@ -312,7 +312,8 @@ SELECT   nvl(ml.app_id, mq.app_id) as app_id
              , nvl(ml.last_updated_on, mq.last_updated_on) as last_update
              , nvl(ml.mail_id, mq.id) as email_id
              , nvl(ml.mail_to, mq.mail_to) as email_to
-             , max(ml.mail_message_send_end)   as email_send_at
+             , max(ml.mail_message_created)    as email_created_at
+             , max(ml.mail_message_send_end) as email_send_at
              , nvl(max(mq.mail_send_error), '0') as email_send_error
 from "APEX_MAIL_LOG" ml full outer join "APEX_MAIL_QUEUE" mq
 on (ml.mail_id = mq.id)
@@ -323,7 +324,7 @@ group by    mq.mail_send_error
                 , nvl(ml.last_updated_on, mq.last_updated_on)
 order by nvl(ml.last_updated_on, mq.last_updated_on);
 
-
+select * from "APEX_MAIL_LOG";
 --------------------------------------------------------------------------
 --- Apex Mail Send 2.0
 declare
@@ -430,4 +431,9 @@ select * from apex_mail_log;
 --WHERE nvl(ml.mail_id, mq.id) =  37979184455647000 -- 37996561446901461 --37996561446901461     -- 37996561446901461
 
 
-
+declare
+l_result   pls_integer;
+begin
+    send_mail('trivadis@bfarm.de', l_result, p_topic => 'REGISTER', p_debug_local => true, p_app_id => 100000);
+end;
+/
