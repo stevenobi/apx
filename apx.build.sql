@@ -5733,12 +5733,14 @@ create or replace procedure "SEND_MAIL" (
     , p_values          in varchar2        := null
     , p_query           in varchar2        := null
     , p_topic           in varchar2        := null
+    , p_username        in  varchar2       := null
     , p_app_id          in pls_integer     := null
     , p_smtp_server     in varchar2        := null
     , p_check_address   in boolean         := null
     , p_check_smtp      in varchar2        := null
     , p_send_testmail   in boolean         := false
     , p_debug_only      in boolean         := false
+    , p_debug_local     in boolean         := false
     )
 is
 
@@ -5746,6 +5748,7 @@ is
     l_from              varchar2(128);
     l_subject           varchar2(128);
     l_topic             varchar2(128);
+    l_username          varchar2(128);
     l_body              clob;
     l_body_html         clob;
     l_params            clob;
@@ -5755,15 +5758,22 @@ is
     l_result            pls_integer;
     l_check_address     boolean;
     l_check_smtp        varchar2(6);
-    l_smtp_server       varchar2(128);
     l_return_code       varchar2(10);
-    l_return_text       varchar2(1000);
+    l_return_text       clob;
     l_send_testmail     boolean;
     l_debug_only        boolean;
+    l_debug_local       boolean;
+    l_smtp_server       varchar2(1000);
+    l_smtp_port         varchar2(1000); 
+    l_message_id        number := null;
+    l_mail_send_date    date := null;
+    l_mail_send_error   varchar2(4000);
 
+    C_DEBUG             constant boolean        := false; -- dbms_output in this procedure
     C_DEBUG_ONLY        constant boolean        := false; -- only dbms_output but dont send mail
     C_SEND_TESTMAIL     constant boolean        := true;  -- allow to send mail with Testmail Subject (see below)
-    C_SMTP_SERVER       constant varchar2(128)  := 'localhost'; -- 'securesmtp.t-online.de requires a certificate and startssl';
+    C_SMTP_SERVER       constant varchar2(1000) := 'localhost'; -- SMTP Server
+    C_SMTP_PORT         constant varchar2(1000) := '25'; 
     C_FROM              constant varchar2(128)  := 's.obermeyer@t-online.de';
     C_DOMAIN            constant varchar2(128)  := 'example.com';
     C_MAILTO            constant varchar2(128)  := 'user@'||C_DOMAIN;
@@ -5776,10 +5786,10 @@ is
     -- Mail Topic Defaults
     LF                  constant varchar2(2)    := utl_tcp.crlf;
     QP                  constant varchar2(4)    := chr(38)||'c='; -- url query prefix for app alias urls &c=WORKSPACE_NAME
-    C_APP_ID            constant pls_integer    := 100;
+    C_APP_ID            constant pls_integer    := 0;
     C_MAIL_ID           constant pls_integer    := null;
     C_TOPIC             constant clob           := null;
-    C_SUBJECT           constant clob           := null;
+    C_SUBJECT           constant varchar2(1000) := null;
     C_BODY              constant clob           := null;
     C_BODY_HTML         constant clob           := null;
     C_PARAMS            constant clob           := null;
@@ -5805,7 +5815,10 @@ begin
     l_smtp_server       := nvl(p_smtp_server,   C_SMTP_SERVER);
     l_send_testmail     := nvl(p_send_testmail, C_SEND_TESTMAIL);
     l_debug_only        := nvl(p_debug_only,    C_DEBUG_ONLY);
+    l_debug_local       := nvl(p_debug_local,   C_DEBUG);
     l_app_id            := nvl(p_app_id,        nvl(p_app_id, nvl(v('APP_ID'), C_APP_ID)));
+    l_username          := p_username;
+    
     -- url query parameter
     if (instr(p_query, QP) > 0
         or
@@ -5880,18 +5893,42 @@ begin
             );
 
         else  -- send the mail
-            apex_mail.send (
-                p_to             => l_mailto,      -- change to your email address
-                p_from           => l_from,        -- change to a real senders email address
-                p_body           => l_body,
-                p_body_html      => l_body_html,
-                p_subj           => l_subject
-            );
+
+             l_message_id :=  apex_mail.send (
+                  p_to               => l_mailto,      -- change to your email address
+                  p_from           => l_from,        -- change to a real senders email address
+                  p_body           => l_body,
+                  p_body_html   => l_body_html,
+                  p_subj            => l_subject
+              );
 
         end if;
+        
+        if (l_debug_local) then
+            dbms_output.put_line('Sending Mail with ID: '||l_message_id||' to '||  l_mailto);
+        end if;    
 
-        l_result := 0;
+       "APEX_MAIL"."PUSH_QUEUE" (
+            p_smtp_hostname   => l_smtp_server
+          , p_smtp_portno        => l_smtp_port
+          );
+ 
+        select email_send_error, email_send_at
+        into l_mail_send_error, l_mail_send_date
+        from  "APEX_MAIL_QUEUE_LOG"
+        where email_id =  l_message_id;
 
+        if (l_mail_send_error != '0') then
+            l_result          := 1;
+            l_return_text  := l_mail_send_error;
+            raise EMAIL_SEND_ERROR;
+        else
+            if (l_debug_local) then
+                dbms_output.put_line('SUCCESS: Mail with ID: '||l_message_id||' to '||  l_mailto || ' was delivered at: ' ||l_mail_send_date);
+            end if;    
+            l_result := 0;
+        end if;
+        
     else
         l_result := -3;
         l_return_code := l_result;
@@ -5910,18 +5947,21 @@ begin
 
 exception
     when EMAIL_SEND_ERROR then
-        l_result      := 1;
         p_result      := l_result;
         l_return_text := SYSDATE||' *** SEND_EMAIL Runtime Exception: [' ||
                          l_return_code ||  ']: '  || l_return_text ;
-        htp.p ('<p>'  || l_return_text || '</p>');
-        dbms_output.put_line (l_return_text);
+        if (l_debug_local) then                 
+            htp.p ('<p>'  || l_return_text || '</p>');
+            dbms_output.put_line (l_return_text);
+        end if;    
     when others then
-        l_result := 1;
+        l_result := -1;
         p_result := l_result;
         l_return_text := SYSDATE||' *** SEND_MAIL SQL Exception: ' || SQLERRM;
-        htp.p ('<p>' || l_return_text || '</p>');
-        dbms_output.put_line (l_return_text);
+        if (l_debug_local) then
+            htp.p ('<p>' || l_return_text || '</p>');
+            dbms_output.put_line (l_return_text);
+        end if;    
     raise;
 end "SEND_MAIL";
 /
