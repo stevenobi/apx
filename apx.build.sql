@@ -5676,7 +5676,7 @@ SELECT        nvl(ml.app_id, mq.app_id) as app_id
             , nvl(max(mq.mail_send_error), '0') as email_send_error
 from "APEX_MAIL_LOG" ml full outer join "APEX_MAIL_QUEUE" mq
 on (ml.mail_id = mq.id)
-where nvl(ml.app_id, mq.app_id) = nvl(v('APP_ID'), 0)  -- to be run from within APEX Session
+--  where nvl(ml.app_id, mq.app_id) = nvl(v('APP_ID'), 0)  -- to be run from within APEX Session
 group by      mq.mail_send_error
             , nvl(ml.mail_id, mq.id)
             , nvl(ml.mail_to, mq.mail_to)
