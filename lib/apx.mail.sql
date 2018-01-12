@@ -203,14 +203,22 @@ is
     l_result                        pls_integer;
     l_debug                         boolean;
     l_send_mail                     boolean;
+    l_smtp_server               varchar2(1000);
+    l_smtp_port                   varchar2(1000); 
+    l_message_id                number;
+    l_mail_send_date          date;
+    l_mail_send_error         varchar2(4000);
+    send_mail_error           exception;
 
     -- Constants
     C_TOPIC                         constant          varchar2(1000)  := 'REGISTER';
     C_FROM                          constant          varchar2(1000)  := 'arzneimittelfaelschung@bfarm.de';
-    C_APP_ID                        constant          pls_integer     := 100000;
-    C_RESULT                        constant          pls_integer     := 0;
-    C_DEBUG                         constant          boolean         := false;
-    C_SEND_MAIL                     constant          boolean         := true;
+    C_APP_ID                        constant          pls_integer       := 100000;
+    C_RESULT                        constant          pls_integer       := 0;
+    C_DEBUG                         constant          boolean            := false;
+    C_SEND_MAIL                   constant          boolean            := true;
+    C_SMTP_SERVER               constant          varchar2(1000) := 'mail.bfarm.de';
+    C_SMTP_PORT                   constant          varchar2(1000) := '25'; 
 
 begin
 
@@ -249,7 +257,6 @@ begin
     -- send confirmation mail if specified
     if l_send_mail then
     
-    dbms_output.put_line('Sending '|| l_topic ||' Mail to: '|| l_mailto);
 
         "SEND_MAIL" (
             p_result      =>  l_result
@@ -261,6 +268,9 @@ begin
           , p_app_id      =>  l_app_id
           , p_debug_only  =>  l_debug
         );
+        
+        dbms_output.put_line('Sending Mail with ID: '||l_message_id||' to '||  l_mailto);
+        l_result := 0;
 
     end if;
 
@@ -294,31 +304,53 @@ begin
 end;
 /
 
+--------------------------------------------------------------------------
+--- Apex Mail Log and Queue
+create or replace view "APEX_MAIL_QUEUE_LOG"
+as
+SELECT   nvl(ml.app_id, mq.app_id) as app_id
+             , nvl(ml.last_updated_on, mq.last_updated_on) as last_update
+             , nvl(ml.mail_id, mq.id) as email_id
+             , nvl(ml.mail_to, mq.mail_to) as email_to
+             , max(ml.mail_message_send_end)   as email_send_at
+             , nvl(max(mq.mail_send_error), '0') as email_send_error
+from "APEX_MAIL_LOG" ml full outer join "APEX_MAIL_QUEUE" mq
+on (ml.mail_id = mq.id)
+group by    mq.mail_send_error
+                , nvl(ml.mail_id, mq.id)
+                , nvl(ml.mail_to, mq.mail_to)
+                , nvl(ml.app_id, mq.app_id)
+                , nvl(ml.last_updated_on, mq.last_updated_on)
+order by nvl(ml.last_updated_on, mq.last_updated_on);
+
+
+--------------------------------------------------------------------------
+--- Apex Mail Send 2.0
 declare
     l_mailto                        varchar2(128) := 'trivadis@bfarm.de' ;
-    l_username                      varchar2(128) := 'Trivadis 1';
-    l_first_name                    varchar2(64) := 'Tri';
-    l_last_name                     varchar2(64) := 'Vadis';
-    l_params                        varchar2(4000) := 'USR,TKN';
+    l_username                   varchar2(128) := 'Trivadis 1';
+    l_first_name                  varchar2(64) := 'Tri';
+    l_last_name                   varchar2(64) := 'Vadis';
+    l_params                       varchar2(4000) := 'USR,TKN';
     l_values                        varchar2(4000) := 'trivadis@bfarm.de, MTk3NTc3ODAwM2JmYXJtLmRlMTc2MDAxNDk0Mw==';
-    l_topic                         varchar2(64) := 'REGISTER';
-    l_userid                        pls_integer;
-    l_domain_id                     pls_integer;
-    l_token                         varchar2(4000);
+    l_topic                           varchar2(64) := 'REGISTER';
+    l_userid                         pls_integer;
+    l_domain_id                   pls_integer;
+    l_token                          varchar2(4000);
     l_app_id                        pls_integer := 100000;
-    l_result                        pls_integer;
+    l_result                          pls_integer;
     l_debug                         boolean;
-    l_send_mail                     boolean := true;
-    l_from                       varchar2(128) := 'arzneimittelfaelschung@bfarm.de';
-    l_subject                   varchar2(128) := 'Hallo Trivadis';
-    l_body                      clob := 'Sie brauchen einen HTML Email Client, um diese Nachricht anzuzeigen' ;
-    l_body_html                 clob := '<html><body><p><h2>HiHo Trivadis</h2><br /> Welcome Dude:-)...</p></body></html>'; 
-    l_smtp_server            varchar2(1000) := 'mail.bfarm.de';
-    l_smtp_port                varchar2(1000) := '25'; 
-    l_message_id             number := null;
-    l_mail_send_date       date := null;
-    l_mail_send_error      varchar2(4000);
-    send_mail_error        exception;
+    l_send_mail                   boolean := true;
+    l_from                           varchar2(128) := 'arzneimittelfaelschung@bfarm.de';
+    l_subject                       varchar2(128) := 'Hallo Trivadis';
+    l_body                          clob := 'Sie brauchen einen HTML Email Client, um diese Nachricht anzuzeigen' ;
+    l_body_html                  clob := '<html><body><p><h2>HiHo Trivadis</h2><br /> Welcome Dude:-)...</p></body></html>'; 
+    l_smtp_server               varchar2(1000) := 'mail.bfarm.de';
+    l_smtp_port                   varchar2(1000) := '25'; 
+    l_message_id                number := null;
+    l_mail_send_date          date := null;
+    l_mail_send_error         varchar2(4000);
+    send_mail_error           exception;
 begin
     -- set Apex Environment
     for c1 in (
@@ -328,11 +360,11 @@ begin
         apex_util.set_security_group_id(p_security_group_id => c1.workspace_id);
     end loop;
 
-    if (      l_mailto    is not null
-        and l_from      is not null
-        and l_body      is not null
-        and l_body_html is not null
-        and l_subject   is not null
+    if (      l_mailto         is not null
+        and l_from          is not null
+        and l_body          is not null
+        and l_body_html  is not null
+        and l_subject       is not null
         ) then
 
         l_message_id :=    apex_mail.send (
@@ -374,32 +406,14 @@ end;
 
 
 
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--- check queries
+
 desc apex_mail;
-
-create or replace view "APEX_MAIL_QUEUE_LOG"
-as
-SELECT   nvl(ml.app_id, mq.app_id) as app_id
-             , nvl(ml.last_updated_on, mq.last_updated_on) as last_update
-             , nvl(ml.mail_id, mq.id) as email_id
-             , nvl(ml.mail_to, mq.mail_to) as email_to
-             , max(ml.mail_message_send_end)   as email_send_at
-             , nvl(max(mq.mail_send_error), '0') as email_send_error
-from "APEX_MAIL_LOG" ml full outer join "APEX_MAIL_QUEUE" mq
-on (ml.mail_id = mq.id)
-group by    mq.mail_send_error
-                , nvl(ml.mail_id, mq.id)
-                , nvl(ml.mail_to, mq.mail_to)
-                , nvl(ml.app_id, mq.app_id)
-                , nvl(ml.last_updated_on, mq.last_updated_on)
-order by nvl(ml.last_updated_on, mq.last_updated_on);
-
 
 select email_send_error, email_send_at 
 from  "APEX_MAIL_QUEUE_LOG"
 where email_id =  37996561446901461; -- 37979184455647000;
-
-
-
 
 SELECT id, nvl(max(mail_send_error), '0') as mail_send_error
 from APEX_MAIL_QUEUE
