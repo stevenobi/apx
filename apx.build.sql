@@ -20,7 +20,7 @@ prompt
 -------------------------------------------------------------------------------
 -- Apex Message Management
 prompt APX$MAIL
-
+drop view        "APEX_MAIL_QUEUE_LOG";
 drop view        "APEX_MAIL_TOPIC_CONTENTS";
 drop synonym     "APEX_MAIL_TOPICS";
 drop synonym     "APEX_MAIL_CONTENT";
@@ -5662,6 +5662,28 @@ end;
 --        "GET_EMAIL_STATUS_TEXT"(is_valid_email_address_code('s.obermeyer@t-online.de'
 --                                   , p_treat_252_as_ok => 'FALSE')) as email_address_status
 -- from dual; -- "6"	"Invalid Email Address Response"
+
+
+--------------------------------------------------------------------------------
+-- Apex Mail Log and Queue
+create or replace view "APEX_MAIL_QUEUE_LOG"
+as
+SELECT        nvl(ml.app_id, mq.app_id) as app_id
+            , nvl(ml.last_updated_on, mq.last_updated_on) as last_update
+            , nvl(ml.mail_id, mq.id) as email_id
+            , nvl(ml.mail_to, mq.mail_to) as email_to
+            , max(ml.mail_message_send_end)   as email_send_at
+            , nvl(max(mq.mail_send_error), '0') as email_send_error
+from "APEX_MAIL_LOG" ml full outer join "APEX_MAIL_QUEUE" mq
+on (ml.mail_id = mq.id)
+where nvl(ml.app_id, mq.app_id) = nvl(v('APP_ID'), 0)  -- to be run from within APEX Session
+group by      mq.mail_send_error
+            , nvl(ml.mail_id, mq.id)
+            , nvl(ml.mail_to, mq.mail_to)
+            , nvl(ml.app_id, mq.app_id)
+            , nvl(ml.last_updated_on, mq.last_updated_on)
+order by nvl(ml.last_updated_on, mq.last_updated_on);
+
 
 
 --------------------------------------------------------------------------------
