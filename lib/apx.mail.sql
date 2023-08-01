@@ -1,7 +1,7 @@
 declare
  l_result pls_integer;
  begin
-     send_mail(  p_mailto => 'Trivadis@bfarm.de'
+     send_mail(  p_mailto => 'Trivadis@example.de'
                , p_result => l_result
                , p_topic  => 'REGISTER'
                , p_app_id => 100000   -- needed for Topic to work :-)
@@ -13,7 +13,7 @@ declare
 declare
 l_result varchar2(4000);
 begin
-    check_email_address('Trivadis@bfarm.de', l_result, p_check_smtp => true);
+    check_email_address('Trivadis@example.de', l_result, p_check_smtp => true);
     dbms_output.put_line(l_result);
 end;
 /
@@ -212,13 +212,13 @@ is
 
     -- Constants
     C_TOPIC                         constant          varchar2(1000)  := 'REGISTER';
-    C_FROM                          constant          varchar2(1000)  := 'arzneimittelfaelschung@bfarm.de';
+    C_FROM                          constant          varchar2(1000)  := 'test@example.de';
     C_APP_ID                        constant          pls_integer       := 100000;
     C_RESULT                        constant          pls_integer       := 0;
     C_DEBUG                         constant          boolean            := false;
-    C_SEND_MAIL                   constant          boolean            := true;
-    C_SMTP_SERVER               constant          varchar2(1000) := 'mail.bfarm.de';
-    C_SMTP_PORT                   constant          varchar2(1000) := '25'; 
+    C_SEND_MAIL                     constant          boolean            := true;
+    C_SMTP_SERVER                   constant          varchar2(1000) := 'mail.example.de';
+    C_SMTP_PORT                     constant          varchar2(1000) := '25'; 
 
 begin
 
@@ -299,7 +299,7 @@ end;
 /
 
 begin
-    "APX_USER_REGISTRATION"('trivadis13@bfarm.de');
+    "APX_USER_REGISTRATION"('trivadis13@example.de');
     commit;
 end;
 /
@@ -328,12 +328,12 @@ select * from "APEX_MAIL_LOG";
 --------------------------------------------------------------------------
 --- Apex Mail Send 2.0
 declare
-    l_mailto                        varchar2(128) := 'trivadis@bfarm.de' ;
+    l_mailto                        varchar2(128) := 'trivadis@example.de' ;
     l_username                   varchar2(128) := 'Trivadis 1';
     l_first_name                  varchar2(64) := 'Tri';
     l_last_name                   varchar2(64) := 'Vadis';
     l_params                       varchar2(4000) := 'USR,TKN';
-    l_values                        varchar2(4000) := 'trivadis@bfarm.de, MTk3NTc3ODAwM2JmYXJtLmRlMTc2MDAxNDk0Mw==';
+    l_values                        varchar2(4000) := 'trivadis@example.de, MTk3NTc3ODAwM2JmYXJtLmRlMTc2MDAxNDk0Mw==';
     l_topic                           varchar2(64) := 'REGISTER';
     l_userid                         pls_integer;
     l_domain_id                   pls_integer;
@@ -342,11 +342,11 @@ declare
     l_result                          pls_integer;
     l_debug                         boolean;
     l_send_mail                   boolean := true;
-    l_from                           varchar2(128) := 'arzneimittelfaelschung@bfarm.de';
+    l_from                           varchar2(128) := 'test@example.de';
     l_subject                       varchar2(128) := 'Hallo Trivadis';
     l_body                          clob := 'Sie brauchen einen HTML Email Client, um diese Nachricht anzuzeigen' ;
     l_body_html                  clob := '<html><body><p><h2>HiHo Trivadis</h2><br /> Welcome Dude:-)...</p></body></html>'; 
-    l_smtp_server               varchar2(1000) := 'mail.bfarm.de';
+    l_smtp_server               varchar2(1000) := 'mail.example.de';
     l_smtp_port                   varchar2(1000) := '25'; 
     l_message_id                number := null;
     l_mail_send_date          date := null;
@@ -434,6 +434,6 @@ select * from apex_mail_log;
 declare
 l_result   pls_integer;
 begin
-    send_mail('trivadis@bfarm.de', l_result, p_topic => 'REGISTER', p_debug_local => true, p_app_id => 100000);
+    send_mail('trivadis@example.de', l_result, p_topic => 'REGISTER', p_debug_local => true, p_app_id => 100000);
 end;
 /
